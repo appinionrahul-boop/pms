@@ -20,7 +20,7 @@
       <th>Requisition Receiving Date</th>
       <th>Delivery Date</th>
       <th>Reference Link</th>
-      <th>Created</th>
+      <!-- <th>Created</th> -->
     </tr>
   </thead>
 
@@ -87,9 +87,9 @@
       </td>
 
       {{-- Created (came from select as plain value, so parse) --}}
-      <td>
+      <!-- <td>
         {{ $r->created_at ? \Carbon\Carbon::parse($r->created_at)->format('d M Y') : '—' }}
-      </td>
+      </td> -->
     </tr>
   @endforeach
 </tbody>

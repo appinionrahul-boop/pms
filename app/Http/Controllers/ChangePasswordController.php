@@ -2,40 +2,42 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class ChangePasswordController extends Controller
 {
-    public function changePassword(Request $request)
+    public function index()
     {
-        
-        $request->validate([
-            'token' => 'required',
-            'email' => 'required|email',
-            'password' => 'required|min:8|confirmed',
-        ]);
-    
-        $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user, $password) {
-                $user->forceFill([
-                    'password' => Hash::make($password)
-                ])->setRememberToken(Str::random(60));
-    
-                $user->save();
-    
-                event(new PasswordReset($user));
-            }
-        );
-    
-        return $status === Password::PASSWORD_RESET
-                    ? redirect('/login')->with('success', __($status))
-                    : back()->withErrors(['email' => [__($status)]]);
+        return view('layouts.navbars.auth.change-password'); // create this view
     }
+
+    public function update(Request $request)
+{
+    $request->validate([
+        'current_password' => 'required',
+        'new_password'     => 'required|string|min:8|confirmed',
+    ]);
+
+    $user = Auth::user();
+
+    // Check current password
+    if (!Hash::check($request->current_password, $user->password)) {
+        return back()->withErrors(['current_password' => 'Your current password is incorrect']);
+    }
+
+    // Update password
+    $user->password = Hash::make($request->new_password);
+    $user->save();
+
+    // ✅ Force logout after password change
+    Auth::logout();
+
+    // ✅ Invalidate session
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect()->route('login')->with('success', 'Password updated successfully. Please log in again.');
+}
 }

@@ -62,9 +62,9 @@
       </li>
 
       {{-- Requisition Management --}}
-      <li class="nav-item mt-2">
+      <!-- <li class="nav-item mt-2">
         <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Requisition Management</h6>
-      </li>
+      </li> -->
       <li class="nav-item pb-2">
         <a class="nav-link {{ Request::is('requisitions*') ? 'active' : '' }}" href="{{ route('requisitions.index') }}">
           <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
@@ -87,9 +87,9 @@
       </li>
 
       {{-- Technical Specification --}}
-      <li class="nav-item mt-2">
+      <!-- <li class="nav-item mt-2">
         <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Technical Specification</h6>
-      </li>
+      </li> -->
       <li class="nav-item pb-2">
         <a class="nav-link {{ Request::is('technical-specs*') ? 'active' : '' }}" href="{{ route('techspecs.index') }}">
           <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
@@ -111,7 +111,9 @@
           <span class="nav-link-text ms-1">Technical Specification</span>
         </a>
       </li>
-
+      <li class="nav-item mt-2">
+        <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Reports</h6>
+      </li>
       {{-- Reports --}}
       <li class="nav-item">
         <a class="nav-link {{ Request::is('reports/procurements') ? 'active' : '' }}" href="{{ route('reports.procurements') }}">
@@ -133,6 +135,34 @@
           <span class="nav-link-text ms-1">Reports</span>
         </a>
       </li>
+      <!-- Settings -->
+       <li class="nav-item mt-2">
+        <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Settings</h6>
+      </li>
+      <li class="nav-item">
+  <a class="nav-link {{ Request::is('change-password') ? 'active' : '' }}" href="{{ route('change.password') }}">
+    <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+      {{-- Lock Icon --}}
+      <svg width="12px" height="12px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <g fill="none" fill-rule="evenodd">
+          <g fill="#FFFFFF" fill-rule="nonzero">
+            <path class="color-background opacity-6" d="M12 2a5 5 0 00-5 5v3H6c-1.1 0-2 .9-2 2v8c0 
+              1.1.9 2 2 2h12c1.1 0 2-.9 
+              2-2v-8c0-1.1-.9-2-2-2h-1V7a5 
+              5 0 00-5-5zm-3 8V7a3 3 0 
+              016 0v3H9z"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <span class="nav-link-text ms-1">Change Password</span>
+  </a>
+</li>
+
+    
+
+
+      
 
 
     </ul>

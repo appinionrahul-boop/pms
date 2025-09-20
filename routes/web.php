@@ -82,9 +82,12 @@ Route::group(['middleware' => 'auth'], function () {
 	Route::get('reports/procurements/export', [ReportController::class, 'export'])
     ->name('reports.procurements.export');
 
+	Route::get('/change-password', [ChangePasswordController::class, 'index'])->name('change.password');
+    Route::post('/change-password', [ChangePasswordController::class, 'update'])->name('change.password.update');
 
 	
 });
+
 
 Route::group(['middleware' => 'guest'], function () {
     // (Optional) disable registration by commenting these two in single-user setup
@@ -95,8 +98,7 @@ Route::group(['middleware' => 'guest'], function () {
     Route::post('/session', [SessionsController::class, 'store']);
 	Route::get('/login/forgot-password', [ResetController::class, 'create']);
 	Route::post('/forgot-password', [ResetController::class, 'sendEmail']);
-	Route::get('/reset-password/{token}', [ResetController::class, 'resetPass'])->name('password.reset');
-	Route::post('/reset-password', [ChangePasswordController::class, 'changePassword'])->name('password.update');
+
 });
 
 // Keep one canonical login route name for redirects

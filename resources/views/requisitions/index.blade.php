@@ -22,7 +22,7 @@
 
         <div class="col-md-2">
           <select name="status_id" class="form-control">
-            <option value="">Status</option>
+            <option value=""> Requisition Status</option>
             @foreach($statuses as $s)
               <option value="{{ $s->id }}" @selected(($filters['status_id'] ?? null) == $s->id)>{{ $s->name }}</option>
             @endforeach
@@ -65,7 +65,7 @@
 
         <div class="col-md-2">
           <button class="btn btn-outline-secondary w-100" type="submit">
-            <i class="fas fa-filter me-1"></i> Filter
+            <i class="fas fa-filter me-1"></i> Search
           </button>
         </div>
         <div class="col-md-2">
@@ -78,49 +78,72 @@
         <table id="packagesTable" class="table table-flush align-items-center mb-0" style="width:100%">
           <thead class="thead-light">
             <tr >
-              <th>Package ID / No</th>
-              <th>Status</th>
-              <th>Type</th>
-              <th>Method</th>
-              <th>LC Status</th>
-              <th class="text-end">Est. Cost (BDT)</th>
-              <th>Created</th>
-              <th class="text-end">Actions</th>
+              <th class="text-center">Package ID</th>
+              <th class="text-center">Package No</th>
+              <th class="text-center">Description</th>
+              <th class="text-center">Procurement Method</th>
+              <th class="text-center">Requisition Status</th>
+              <th class="text-center">Name of Vendor</th>
+              <th class="text-center">Department</th>
+              <th class="text-center">Type of Procurement</th>
+              <th class="text-center">Assigned Officer</th>
+              <!-- <th>Created</th> -->
+              <th class="text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-          @foreach($requisitions as $r)
-            <tr >
-              <td>
-                <div class="fw-semibold">{{ $r->package->package_id ?? '—' }}</div>
-                <div class="text-xs text-secondary">{{ $r->package_no }}</div>
-              </td>
-              <td>{{ $r->status->name ?? '—' }}</td>
-              <td>{{ $r->procurementType->name ?? '—' }}</td>
-              <td>{{ $r->method->name ?? '—' }}</td>
-              <td>{{ $r->lcStatus->name ?? '—' }}</td>
-              <td class="text-end">{{ number_format((float)($r->estimated_cost_bdt ?? 0), 2) }}</td>
-              <td>{{ optional($r->created_at)->format('Y-m-d') }}</td>
-              <td class="text-end">
-                <a href="{{ route('requisitions.show', $r) }}" class="btn btn-link text-secondary px-2 mb-0">
-                  <i class="fas fa-eye me-1"></i> View
-                </a>
-                <a href="{{ route('requisitions.edit', $r) }}" class="btn btn-link text-primary px-2 mb-0">
-                  <i class="fas fa-edit me-1"></i> Edit
-                </a>
-                <form action="{{ route('requisitions.destroy', $r) }}" method="POST" class="d-inline"
-                      onsubmit="return confirm('Delete this requisition?');">
-                  @csrf @method('DELETE')
-                  <button class="btn btn-link text-danger px-2 mb-0" type="submit">
-                    <i class="fas fa-trash me-1"></i> Delete
-                  </button>
-                </form>
-              </td>
-            </tr>
-          @endforeach
-          {{-- IMPORTANT: no @empty row with colspan here.
-               Let DataTables show its own empty message. --}}
-          </tbody>
+  @foreach($requisitions as $r)
+    <tr class="text-center">
+      {{-- Package ID --}}
+      <td class="text-center">{{ $r->package->package_id ?? '—' }}</td>
+
+      {{-- Package No --}}
+      <td class="text-center">{{ $r->package_no ?? '—' }}</td>
+
+      {{-- Description --}}
+      <td style="max-width:320px" class="text-center">{{ $r->description ?? '—' }}</td>
+
+      {{-- Procurement Method --}}
+      <td class="text-center">{{ $r->method->name ?? '—' }}</td>
+
+      {{-- Requisition Status --}}
+      <td class="text-center">{{ $r->status->name ?? '—' }}</td>
+
+      {{-- Vendor Name --}}
+      <td class="text-center">{{ $r->vendor_name ?? '—' }}</td>
+
+      {{-- Department --}}
+      <td class="text-center">{{ $r->department->name ?? '—' }}</td>
+
+      {{-- Type of Procurement --}}
+      <td class="text-center">{{ $r->procurementType->name ?? '—' }}</td>
+
+      {{-- Assigned Officer (officer_name column) --}}
+      <td class="text-center">{{ $r->officer_name ?? '—' }}</td>
+
+      {{-- Created Date --}}
+      <!-- <td>{{ optional($r->created_at)->format('Y-m-d') }}</td> -->
+
+      {{-- Actions --}}
+      <td class="text-cebter">
+        <a href="{{ route('requisitions.show', $r) }}" class="btn btn-link text-secondary px-2 mb-0">
+          <i class="fas fa-eye me-1"></i> View
+        </a>
+        <a href="{{ route('requisitions.edit', $r) }}" class="btn btn-link text-primary px-2 mb-0">
+          <i class="fas fa-edit me-1"></i> Edit
+        </a>
+        <form action="{{ route('requisitions.destroy', $r) }}" method="POST" class="d-inline"
+              onsubmit="return confirm('Delete this requisition?');">
+          @csrf @method('DELETE')
+          <button class="btn btn-link text-danger px-2 mb-0" type="submit">
+            <i class="fas fa-trash me-1"></i> Delete
+          </button>
+        </form>
+      </td>
+    </tr>
+  @endforeach
+</tbody>
+
         </table>
       </div>
 
@@ -142,6 +165,7 @@
     $('#packagesTable').DataTable({
       order: [[6, 'desc']],                // sort by Created (7th col index = 6)
       pageLength: 10,
+       searching: false,  
       lengthMenu: [10, 25, 50, 100],
       columnDefs: [
         { targets: 7, orderable: false, className: 'text-end align-middle' }, // Actions
@@ -149,8 +173,8 @@
         { targets: [0,1,2,3,4,6], className: 'align-middle' }
       ],
       language: {
-        search: 'Search:',
-        searchPlaceholder: 'Package ID / Package No...',
+        // search: 'Search:',
+        // searchPlaceholder: 'Package ID / Package No...',
         emptyTable: 'No requisitions found.',
         zeroRecords: 'No matching requisitions.'
       }

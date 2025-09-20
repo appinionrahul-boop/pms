@@ -80,7 +80,7 @@
     <div class="card-header pb-0 d-flex justify-content-between align-items-center">
       <div>
         <h6 class="mb-0">Technical Specifications</h6>
-        <small class="text-muted">Search by Package ID or Package No (use the table’s search box)</small>
+        <!-- <small class="text-muted">Search by Package ID or Package No (use the table’s search box)</small> -->
       </div>
       <div>
         <a href="{{ route('techspecs.create') }}" class="btn btn-sm bg-gradient-primary">
