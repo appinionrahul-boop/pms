@@ -16,21 +16,24 @@
           <form method="POST" action="{{ route('change.password.update') }}">
             @csrf
 
-            <div class="mb-3">
+            <div class="mb-3 position-relative">
               <label>Current Password</label>
-              <input type="password" name="current_password" class="form-control" required>
+              <input type="password" name="current_password" id="current_password" class="form-control pe-5" required>
+              <span class="password-toggle" onclick="togglePassword('current_password')">👁</span>
               @error('current_password') <p class="text-danger">{{ $message }}</p> @enderror
             </div>
 
-            <div class="mb-3">
+            <div class="mb-3 position-relative">
               <label>New Password</label>
-              <input type="password" name="new_password" class="form-control" required>
+              <input type="password" name="new_password" id="new_password" class="form-control pe-5" required>
+              <span class="password-toggle" onclick="togglePassword('new_password')">👁</span>
               @error('new_password') <p class="text-danger">{{ $message }}</p> @enderror
             </div>
 
-            <div class="mb-3">
+            <div class="mb-3 position-relative">
               <label>Confirm New Password</label>
-              <input type="password" name="new_password_confirmation" class="form-control" required>
+              <input type="password" name="new_password_confirmation" id="new_password_confirmation" class="form-control pe-5" required>
+              <span class="password-toggle" onclick="togglePassword('new_password_confirmation')">👁</span>
             </div>
 
             <button type="submit" class="btn btn-info w-100">Update Password</button>
@@ -40,4 +43,24 @@
     </div>
   </div>
 </div>
+
+<style>
+  .password-toggle {
+    position: absolute;
+    top: 71%;
+    right: 15px;
+    transform: translateY(-50%);
+    cursor: pointer;
+    user-select: none;
+    font-size: 1rem;
+    color: #555;
+  }
+</style>
+
+<script>
+  function togglePassword(fieldId) {
+    const input = document.getElementById(fieldId);
+    input.type = input.type === "password" ? "text" : "password";
+  }
+</script>
 @endsection

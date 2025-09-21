@@ -5,8 +5,8 @@
   <div class="card">
     <div class="card-header pb-0 d-flex justify-content-between align-items-center">
       <h6 class="mb-0">Edit Requisition</h6>
-      <a href="{{ route('requisitions.show',$requisition) }}" class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-arrow-left me-1"></i> Back to Details
+      <a href="{{ route('requisitions.index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Cancel
       </a>
     </div>
 

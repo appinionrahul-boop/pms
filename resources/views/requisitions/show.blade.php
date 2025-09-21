@@ -18,7 +18,7 @@
         <div class="col-md-3"><strong>Package No:</strong> {{ $requisition->package_no }}</div>
         <div class="col-md-6"><strong>Description:</strong> {{ $requisition->description }}</div>
       </div>
-
+      <br>
       {{-- Requisition Meta --}}
       <h6 class="mt-4 mb-3">Requisition Info</h6>
       <div class="row mb-2">
@@ -46,9 +46,10 @@
         <div class="col-md-3"><strong>Delivery Date:</strong> {{ $requisition->delivery_date ?? '—' }}</div>
         <div class="col-md-3"><strong>Signing Date:</strong> {{ $requisition->signing_date ?? '—' }}</div>
         <div class="col-md-3"><strong>Reference Link:</strong> 
-          @if($requisition->reference_link)
+          <!-- @if($requisition->reference_link)
             <a href="{{ $requisition->reference_link }}" target="_blank">Open</a>
-          @else — @endif
+          @else — @endif -->
+          {{$requisition->reference_link ?? '—'}}
         </div>
       </div>
 
@@ -68,7 +69,7 @@
       <div class="row mb-2">
         <div class="col-md-12"><strong>Comments:</strong><br>{{ $requisition->comments ?? '—' }}</div>
       </div>
-
+       <br>
       {{-- Technical Specs --}}
       <h6 class="mt-4 mb-3">Technical Specifications</h6>
       <div class="table-responsive">

@@ -20,7 +20,7 @@
 
     {{-- Month (optional) --}}
     <div class="col-12 col-md-3">
-      <label class="form-label mb-1">Month</label>
+      <label class="form-label mb-1 text-center">Month</label>
       <select name="month" class="form-select control-eq">
         <option value="" {{ empty($selMonth) ? 'selected' : '' }}>All Months</option>
         @foreach ($months as $mVal => $mLabel)
@@ -70,20 +70,23 @@
 <div class="row g-3 mb-4">
   <div class="col-md-4">
     <div class="card p-3">
-      <div class="text-muted">Total Packages</div>
-      <div class="h4 m-0">{{ $packagesTotal }}</div>
+       <a href="{{ route('packages.all') }}" class="stretched-link"></a>
+      <div class="text-muted text-center">Total Packages</div>
+      <div class="h4 m-0 text-center">{{ $packagesTotal }}</div>
     </div>
   </div>
   <div class="col-md-4">
     <div class="card p-3">
-      <div class="text-muted">Total Requisitions</div>
-      <div class="h4 m-0">{{ $requisitionsTotal }}</div>
+       <a href="{{ route('requisitions.index') }}" class="stretched-link"></a>
+      <div class="text-muted text-center">Total Requisitions</div>
+      <div class="h4 m-0 text-center">{{ $requisitionsTotal }}</div>
     </div>
   </div>
   <div class="col-md-4">
     <div class="card p-3">
-      <div class="text-muted">Packages w/o Requisition</div>
-      <div class="h4 m-0">{{ $packagesWithoutReqTotal }}</div>
+      <a href="{{ route('packages.index') }}" class="stretched-link"></a>
+      <div class="text-muted text-center">Packages w/o Requisition</div>
+      <div class="h4 m-0 text-center">{{ $packagesWithoutReqTotal }}</div>
     </div>
   </div>
 </div>
@@ -92,32 +95,32 @@
 <div class="row g-3 mb-4">
   <div class="col-md-2">
     <div class="card p-3 text-center">
-      <div class="text-muted small">Initiate</div>
-      <div class="h4 m-0">{{ $initiateCount }}</div>
+      <div class="text-muted small text-center">Initiate</div>
+      <div class="h4 m-0 text-center">{{ $initiateCount }}</div>
     </div>
   </div>
   <div class="col-md-3">
     <div class="card p-3 text-center">
-      <div class="text-muted small">Tender Opened</div>
-      <div class="h4 m-0">{{ $tenderOpenedCount }}</div>
+      <div class="text-muted small text-center">Tender Opened</div>
+      <div class="h4 m-0 text-center">{{ $tenderOpenedCount }}</div>
     </div>
   </div>
   <div class="col-md-3">
     <div class="card p-3 text-center">
-      <div class="text-muted small">Evaluation Completed</div>
-      <div class="h4 m-0">{{ $evaluationCount }}</div>
+      <div class="text-muted small text-center">Evaluation Completed</div>
+      <div class="h4 m-0 text-center">{{ $evaluationCount }}</div>
     </div>
   </div>
   <div class="col-md-2">
     <div class="card p-3 text-center">
-      <div class="text-muted small">Contract Signed</div>
-      <div class="h4 m-0">{{ $contractSignedCount }}</div>
+      <div class="text-muted small text-center">Contract Signed</div>
+      <div class="h4 m-0 text-center">{{ $contractSignedCount }}</div>
     </div>
   </div>
   <div class="col-md-2">
     <div class="card p-3 text-center">
-      <div class="text-muted small">Delivered</div>
-      <div class="h4 m-0">{{ $deliveredCount }}</div>
+      <div class="text-muted small text-center">Delivered</div>
+      <div class="h4 m-0 text-center">{{ $deliveredCount }}</div>
     </div>
   </div>
 </div>

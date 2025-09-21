@@ -1,7 +1,8 @@
 @extends('layouts.user_type.auth')
 
-@section('content') 
-<!-- <div class="container-fluid py-4">
+@section('content')
+
+<div class="container-fluid py-4">
   <div class="card">
     <div class="card-header pb-0 d-flex justify-content-between align-items-center">
       <div>
@@ -29,12 +30,12 @@
       </form>
 
       <div class="table-responsive">
-        <table class="table align-items-center mb-0">
+        <table class="table align-items-center mb-0" id="packagesTable" style="width:100%">
           <thead>
             <tr>
               <th>Package ID</th>
               <th>Package No</th>
-              <th>Requisition Created Date</th>
+              <th style="width:60%">Description</th> {{-- make this column take up to 60% --}}
               <th class="text-end">Action</th>
             </tr>
           </thead>
@@ -42,13 +43,15 @@
           @forelse($packages as $p)
             @php
               $firstReq = $p->requisitions->first();
-              $created  = $firstReq?->created_at?->format('Y-m-d') ?? '—';
+              $desc    = $firstReq?->description ?? '—';
             @endphp
             <tr>
-              <td>{{ $p->package_id }}</td>
-              <td>{{ $p->package_no }}</td>
-              <td>{{ $created }}</td>
-              <td class="text-end">
+              <td class="align-middle">{{ $p->package_id }}</td>
+              <td class="align-middle">{{ $p->package_no }}</td>
+              <td class="align-middle desc-cell">
+                <span class="desc-text">{{ $desc }}</span>
+              </td>
+              <td class="text-end align-middle">
                 <a href="{{ route('techspecs.show', $p) }}" class="btn btn-link text-secondary px-2 mb-0">
                   <i class="fas fa-eye me-1"></i> View
                 </a>
@@ -64,8 +67,6 @@
           @endforelse
           </tbody>
         </table>
-        
-
       </div>
 
       <div class="mt-3 px-3">
@@ -73,91 +74,49 @@
       </div>
     </div>
   </div>
-</div> -->
-
-<div class="container-fluid py-4">
-  <div class="card">
-    <div class="card-header pb-0 d-flex justify-content-between align-items-center">
-      <div>
-        <h6 class="mb-0">Technical Specifications</h6>
-        <!-- <small class="text-muted">Search by Package ID or Package No (use the table’s search box)</small> -->
-      </div>
-      <div>
-        <a href="{{ route('techspecs.create') }}" class="btn btn-sm bg-gradient-primary">
-          <i class="fas fa-plus me-1"></i> Add New
-        </a>
-      </div>
-    </div>
-
-    <div class="card-body pt-3">
-      <div class="table-responsive">
-        <table id="packagesTable" class="table table-striped align-items-center mb-0" style="width:100%">
-          <thead>
-            <tr>
-              <th>Package ID</th>
-              <th>Package No</th>
-              <th>Requisition Created Date</th>
-              <th class="text-end">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-          @forelse($packages as $p)
-            @php
-              $firstReq = $p->requisitions->first();
-              $created  = $firstReq?->created_at?->format('Y-m-d') ?? '—';
-            @endphp
-            <tr>
-              <td>{{ $p->package_id }}</td>
-              <td>{{ $p->package_no }}</td>
-              <td>{{ $created }}</td>
-              <td class="text-end">
-                <a href="{{ route('techspecs.show', $p) }}" class="btn btn-link text-secondary px-2 mb-0">
-                  <i class="fas fa-eye me-1"></i> View
-                </a>
-                <a href="{{ route('techspecs.createForPackage', $p) }}" class="btn btn-link text-success px-2 mb-0">
-                  <i class="fas fa-plus me-1"></i> Add New
-                </a>
-              </td>
-            </tr>
-          @empty
-            <tr>
-              <td colspan="4" class="text-center text-secondary py-3">No packages found.</td>
-            </tr>
-          @endforelse
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>
 </div>
 
+{{-- Wrapping rules for Description column --}}
+<style>
+  /* allow wrapping in table cells (DataTables sometimes forces nowrap) */
+  #packagesTable td { white-space: normal !important; }
 
+  /* description cell: cap width and wrap on words */
+  .desc-cell { max-width: 60%; }
+  .desc-text {
+    display: inline-block;
+    max-width: 100%;
+    word-break: keep-all;       /* avoid breaking inside words */
+    overflow-wrap: break-word;  /* if a single long word, allow breaking */
+  }
+
+  @media (max-width: 768px) {
+    .desc-cell { max-width: 100%; } /* full width on small screens */
+  }
+</style>
+
+{{-- jQuery + DataTables --}}
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 
 <script>
   $(function () {
     $('#packagesTable').DataTable({
-      order: [[2, 'desc']],     // default sort by date
+      order: [[1, 'asc']],          // sort by Package No (client-side within current page)
       pageLength: 10,
       lengthMenu: [10, 25, 50, 100],
+      searching: false,             // you’re using the top filter form
       columnDefs: [
-        { targets: 3, orderable: false }, // disable sort on Action
-        { targets: [0,1,2], className: 'align-middle' },
-        { targets: 3, className: 'text-end align-middle' }
+        { targets: 3, orderable: false, className: 'text-end align-middle' },
+        { targets: [0,1,2], className: 'align-middle' }
       ],
       language: {
-        search: 'Search:',
-        searchPlaceholder: 'Package ID / Package No...'
+        emptyTable: 'No packages found.',
+        zeroRecords: 'No matching packages.'
       }
     });
   });
 </script>
 
-
-
 @endsection
-

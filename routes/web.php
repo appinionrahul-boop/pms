@@ -85,6 +85,11 @@ Route::group(['middleware' => 'auth'], function () {
 	Route::get('/change-password', [ChangePasswordController::class, 'index'])->name('change.password');
     Route::post('/change-password', [ChangePasswordController::class, 'update'])->name('change.password.update');
 
+	// View page with DataTable
+    Route::get('/packages/all', [PackageController::class, 'all'])->name('packages.all');
+    // Ajax feed for DataTables
+   Route::get('/packages/download/excel', [PackageController::class, 'downloadExcel'])
+     ->name('packages.download.excel');
 	
 });
 

@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use App\Models\ProcurementMethod; 
 use App\Imports\PackagesImport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PackagesExport;
+use Maatwebsite\Excel\Excel as ExcelFormat;
 
 
 class PackageController extends Controller
@@ -116,4 +118,27 @@ class PackageController extends Controller
         $package->delete();
         return back()->with('success', 'Package deleted.');
     }
+
+    public function all()
+    {
+        $packages = Package::query()
+            ->select([
+                 'packages.package_id',
+                'packages.package_no',
+                'packages.description',
+                'procurement_methods.name as procurement_method_name',
+                'packages.estimated_cost_bdt'
+            ])
+            ->leftJoin('procurement_methods', 'packages.procurement_method_id', '=', 'procurement_methods.id')
+            ->orderBy('packages.id', 'ASC')
+            ->get();
+
+        return view('packages.all', compact('packages'));
+    }
+    
+     public function downloadExcel()
+    {
+        return Excel::download(new PackagesExport, 'packages.xlsx', ExcelFormat::XLSX);
+    }
+
 }

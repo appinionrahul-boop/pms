@@ -206,4 +206,104 @@
     </div>
   </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Select the form and date inputs
+  const form = document.querySelector('form[action="{{ route('requisitions.store') }}"]');
+  const reqDate  = document.querySelector('[name="requisition_receiving_date"]');
+  const delDate  = document.querySelector('[name="delivery_date"]');
+  const signDate = document.querySelector('[name="signing_date"]');
+
+  const parseDate = v => v ? new Date(v + 'T00:00:00') : null;
+
+  function setFeedback(el, ok, msg = '') {
+    if (!el) return;
+    // remove existing feedback first
+    const holder = el.parentElement;
+    let fb = holder.querySelector('.invalid-feedback.js-date');
+    if (ok) {
+      el.classList.remove('is-invalid');
+      el.setCustomValidity('');
+      if (fb) fb.remove();
+    } else {
+      el.classList.add('is-invalid');
+      el.setCustomValidity(msg);
+      if (!fb) {
+        fb = document.createElement('div');
+        fb.className = 'invalid-feedback js-date d-block';
+        holder.appendChild(fb);
+      }
+      fb.textContent = msg;
+    }
+  }
+
+  function syncMinMax() {
+    // Guide user with native min/max
+    if (reqDate?.value) {
+      delDate?.setAttribute('min', reqDate.value);
+      signDate?.setAttribute('min', reqDate.value);
+    } else {
+      delDate?.removeAttribute('min');
+      signDate?.removeAttribute('min');
+    }
+    if (delDate?.value) {
+      signDate?.setAttribute('max', delDate.value);
+    } else {
+      signDate?.removeAttribute('max');
+    }
+  }
+
+  function validateDates() {
+    let ok = true;
+    const r = parseDate(reqDate?.value);
+    const d = parseDate(delDate?.value);
+    const s = parseDate(signDate?.value);
+
+    // Clear previous errors
+    [reqDate, delDate, signDate].forEach(el => setFeedback(el, true));
+
+    // Rule 1: Requisition Receiving Date <= Delivery Date
+    if (r && d && r > d) {
+      ok = false;
+      setFeedback(reqDate, false, 'Requisition Receiving Date cannot be after Delivery Date.');
+      setFeedback(delDate, false, 'Delivery Date must be on/after Requisition Receiving Date.');
+    }
+
+    // Rule 2a: Signing Date >= Requisition Receiving Date
+    if (r && s && s < r) {
+      ok = false;
+      setFeedback(signDate, false, 'Signing Date must be on/after Requisition Receiving Date.');
+    }
+
+    // Rule 2b: Signing Date <= Delivery Date
+    if (s && d && s > d) {
+      ok = false;
+      setFeedback(signDate, false, 'Signing Date must be on/before Delivery Date.');
+    }
+
+    return ok;
+  }
+
+  // Wire up events
+  [reqDate, delDate, signDate].forEach(el => {
+    el && el.addEventListener('change', () => {
+      syncMinMax();
+      validateDates();
+    });
+  });
+
+  form && form.addEventListener('submit', function (e) {
+    syncMinMax();
+    if (!validateDates()) {
+      e.preventDefault();
+      // Optional: trigger native popup
+      // form.reportValidity();
+    }
+  });
+
+  // Initial sync on load
+  syncMinMax();
+});
+</script>
+
 @endsection

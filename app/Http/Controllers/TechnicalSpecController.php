@@ -10,25 +10,31 @@ use Illuminate\Http\Request;
 class TechnicalSpecController extends Controller
 {
     // Index: Package list with first requisition created date (if any), filter by package id/no
-    public function index(Request $request)
-    {
-        $q = trim((string) $request->get('q', ''));
+public function index(Request $request)
+{
+    $q = trim((string) $request->get('q', ''));
 
-        $packages = Package::query()
-            ->with(['requisitions' => function($x){ $x->select('id','package_id','created_at')->orderBy('created_at'); }])
-            ->when($q !== '', function($x) use ($q){
-                $x->where(function($y) use ($q){
-                    $y->where('package_id','like',"%{$q}%")
-                      ->orWhere('package_no','like',"%{$q}%");
-                });
-            })
-            ->whereHas('technicalSpecs') // only packages that already have specs; remove if you want to list all
-            ->orderByDesc('id')
-            ->paginate(10)
-            ->withQueryString();
+    $packages = Package::query()
+        ->with([
+            'requisitions' => function ($x) {
+                $x->select('id', 'package_id', 'description', 'created_at')  // ← added description
+                  ->orderBy('created_at');
+            }
+        ])
+        ->when($q !== '', function ($x) use ($q) {
+            $x->where(function ($y) use ($q) {
+                $y->where('package_id', 'like', "%{$q}%")
+                  ->orWhere('package_no', 'like', "%{$q}%");
+            });
+        })
+        ->whereHas('technicalSpecs') // keep/remove as you need
+        ->orderByDesc('id')
+        ->paginate(10)
+        ->withQueryString();
 
-        return view('technical_specs.index', compact('packages','q'));
-    }
+    return view('technical_specs.index', compact('packages', 'q'));
+}
+
 
     // Details: all specs for a given package
     public function show(Package $package)

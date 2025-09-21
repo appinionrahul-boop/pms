@@ -5,7 +5,7 @@
 
     <!-- Logo -->
     <a class="navbar-brand d-flex align-items-center" href="{{ url('dashboard') }}">
-      <img src="{{ asset('assets/img/fol.jpg') }}" alt="Company Logo" style="height:100px;">
+      <img src="{{ asset('assets/img/fol.jpg') }}" alt="Company Logo" style="height:40px;">
     </a>
 
     <!-- Centered Company Name -->

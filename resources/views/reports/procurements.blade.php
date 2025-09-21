@@ -68,7 +68,7 @@
     </div>
 
     <div class="d-flex gap-2 mt-3">
-      <button class="btn btn-primary" type="submit">Apply Filters</button>
+      <button class="btn btn-primary" type="submit">Apply Search</button>
       <a href="{{ route('reports.procurements') }}" class="btn btn-outline-secondary">Reset</a>
       <a href="{{ route('reports.procurements.export', request()->query()) }}" class="btn btn-outline-success">Export Excel</a>
     </div>
@@ -91,7 +91,6 @@
             <th class="text-center">LC Status</th>
             <th class="text-center">Assigned Officer</th>
             <th class="text-center">Unit</th>
-            <!-- <th>Type of Goods</th> -->
             <th class="text-center">Estimated Cost (BDT)</th>
             <th class="text-center">Quantity/Nos.</th>
             <th class="text-center">Approving Authority</th>
@@ -100,9 +99,6 @@
             <th class="text-center">Requisition Receiving Date</th>
             <th class="text-center">Delivery Date</th>
             <th class="text-center">Reference Link</th>
-            <!-- <th>Tech Spec</th> -->
-            <!-- <th>Reference Annex</th> -->
-            <!-- <th>Created</th> -->
           </tr>
         </thead>
         <tbody>
@@ -110,47 +106,53 @@
             <tr>
               <td class="text-center">{{ $r->package_id }}</td>
               <td class="text-center">{{ $r->package_no }}</td>
-              <td  class="text-center"style="max-width:420px">{{ $r->description }}</td>
+              <td class="text-center" style="max-width:420px">{{ $r->description }}</td>
               <td class="text-center">{{ $r->procurement_method ?? '—' }}</td>
-              <td class="text-center"><span class="badge bg-secondary">{{ $r->requisition_status ?? '—' }}</span></td>
+              <td class="text-center">
+                <span class="badge bg-secondary">{{ $r->requisition_status ?? '—' }}</span>
+              </td>
               <td class="text-center">{{ $r->vendor_name ?? '—' }}</td>
               <td class="text-center">{{ $r->department ?? '—' }}</td>
               <td class="text-center">{{ $r->procurement_type ?? '—' }}</td>
               <td class="text-center">{{ $r->lc_status ?? '—' }}</td>
               <td class="text-center">{{ $r->officer_name ?? '—' }}</td>
               <td class="text-center">{{ $r->unit ?? '—' }}</td>
-              <!-- <td>{{ $r->type_of_goods ?? '—' }}</td> -->
+
+              {{-- INTEGER formatting for money/qty --}}
               <td class="text-end">
-                {{ isset($r->estimated_cost_bdt) ? number_format($r->estimated_cost_bdt, 2) : '—' }}
+                @if(isset($r->estimated_cost_bdt) && is_numeric($r->estimated_cost_bdt))
+                  {{ number_format((int)$r->estimated_cost_bdt, 0) }}
+                @else
+                  —
+                @endif
               </td>
-              <td class="text-center">{{ $r->quantity ?? '—' }}</td>
+              <td class="text-center">
+                @if(isset($r->quantity) && is_numeric($r->quantity))
+                  {{ (int)$r->quantity }}
+                @else
+                  —
+                @endif
+              </td>
               <td class="text-center">{{ $r->approving_authority ?? '—' }}</td>
-              <td class="text-center">{{ $r->signing_date ? \Carbon\Carbon::parse($r->signing_date)->format('d M Y') : '—' }}</td>
               <td class="text-center">
-                {{ isset($r->official_estimated_cost_bdt) ? number_format($r->official_estimated_cost_bdt, 2) : '—' }}
+                {{ $r->signing_date ? \Carbon\Carbon::parse($r->signing_date)->format('d M Y') : '—' }}
               </td>
-              <td class="text-center">{{ $r->requisition_receiving_date ? \Carbon\Carbon::parse($r->requisition_receiving_date)->format('d M Y') : '—' }}</td>
-              <td class="text-center">{{ $r->delivery_date ? \Carbon\Carbon::parse($r->delivery_date)->format('d M Y') : '—' }}</td>
+              <td class="text-end">
+                @if(isset($r->official_estimated_cost_bdt) && is_numeric($r->official_estimated_cost_bdt))
+                  {{ number_format((int)$r->official_estimated_cost_bdt, 0) }}
+                @else
+                  —
+                @endif
+              </td>
               <td class="text-center">
-                @if($r->reference_link)
-                  <a href="{{ $r->reference_link }}" target="_blank" rel="noopener">Open</a>
-                @else — @endif
+                {{ $r->requisition_receiving_date ? \Carbon\Carbon::parse($r->requisition_receiving_date)->format('d M Y') : '—' }}
               </td>
-              <!-- <td>
-                @if($r->tech_spec_file)
-                  <a href="{{ Storage::disk('public')->url($r->tech_spec_file) }}" target="_blank" rel="noopener">
-                    {{ basename($r->tech_spec_file) }}
-                  </a>
-                @else — @endif
-              </td> -->
-              <!-- <td>
-                @if($r->reference_annex)
-                  <a href="{{ Storage::disk('public')->url($r->reference_annex) }}" target="_blank" rel="noopener">
-                    {{ basename($r->reference_annex) }}
-                  </a>
-                @else — @endif
-              </td> -->
-              <!-- <td class="text-center">{{ $r->created_at ? $r->created_at->format('d M Y') : '—' }}</td> -->
+              <td class="text-center">
+                {{ $r->delivery_date ? \Carbon\Carbon::parse($r->delivery_date)->format('d M Y') : '—' }}
+              </td>
+              <td class="text-center">
+                {{ $r->reference_link ?? '—' }}
+              </td>
             </tr>
           @endforeach
         </tbody>
@@ -174,12 +176,13 @@
 
   $(function () {
     $('#packagesTable').DataTable({
-      // Choose a sensible default sort; e.g., Package No (1) asc
-      order: [[1, 'asc']],
+      order: [[1, 'asc']],  // sort by Package No by default
       pageLength: 10,
       lengthMenu: [10, 25, 50, 100],
       columnDefs: [
-        { targets: [0,1,2,3,4,5,6,7,8], className: 'align-middle' },
+        { targets: '_all', className: 'align-middle' },
+        // Make currency columns align right for readability
+        { targets: [11, 15], className: 'text-end align-middle' }
       ],
       language: {
         search: 'Search:',

@@ -214,52 +214,98 @@ class RequisitionController extends Controller
             ->with('success','Requisition updated successfully.');
     }
 
+    // public function index(Request $request)
+    // {
+    //     $filters = $request->only([
+    //         'k',                 
+    //         'status_id',
+    //         'procurement_type_id',
+    //         'procurement_method_id',
+    //         'lc_status_id',
+    //         'date_from',
+    //         'date_to',
+    //     ]);
+
+    //     $q = Requisition::query()
+    //         ->with(['package','status','procurementType','method','lcStatus']);
+
+      
+    //     if (!empty($filters['k'])) {
+    //         $k = '%'.$filters['k'].'%';
+    //         $q->where(function($x) use ($k){
+    //             $x->where('package_no', 'like', $k)
+    //               ->orWhere('vendor_name', 'like', $k)
+    //               ->orWhere('description', 'like', $k);
+    //         });
+    //     }
+
+   
+    //     if (!empty($filters['status_id']))              $q->where('requisition_status_id',   $filters['status_id']);
+    //     if (!empty($filters['procurement_type_id']))    $q->where('procurement_type_id',     $filters['procurement_type_id']);
+    //     if (!empty($filters['procurement_method_id']))  $q->where('procurement_method_id',   $filters['procurement_method_id']);
+    //     if (!empty($filters['lc_status_id']))           $q->where('lc_status_id',            $filters['lc_status_id']);
+
+  
+    //     if (!empty($filters['date_from'])) $q->whereDate('created_at', '>=', $filters['date_from']);
+    //     if (!empty($filters['date_to']))   $q->whereDate('created_at', '<=', $filters['date_to']);
+
+    //     $requisitions = $q->orderByDesc('created_at')
+    //         ->paginate(100)
+    //         ->withQueryString(); 
+
+    //     return view('requisitions.index', [
+    //         'requisitions' => $requisitions,
+    //         'filters'      => $filters,
+    //         'statuses'     => RequisitionStatus::orderBy('name')->get(),
+    //         'types'        => ProcurementType::orderBy('name')->get(),
+    //         'methods'      => ProcurementMethod::orderBy('name')->get(),
+    //         'lcStatuses'   => LcStatus::orderBy('name')->get(),
+    //     ]);
+    // }
     public function index(Request $request)
-    {
-        $filters = $request->only([
-            'k',                 // keyword
-            'status_id',
-            'procurement_type_id',
-            'procurement_method_id',
-            'lc_status_id',
-            'date_from',
-            'date_to',
-        ]);
+{
+    $filters = $request->only([
+        'k','status_id','procurement_type_id','procurement_method_id','lc_status_id','date_from','date_to',
+    ]);
 
-        $q = Requisition::query()
-            ->with(['package','status','procurementType','method','lcStatus']);
-
-        // keyword search (package_no, vendor, description)
-        if (!empty($filters['k'])) {
-            $k = '%'.$filters['k'].'%';
-            $q->where(function($x) use ($k){
-                $x->where('package_no', 'like', $k)
-                  ->orWhere('vendor_name', 'like', $k)
-                  ->orWhere('description', 'like', $k);
-            });
-        }
-
-        // dropdown filters
-        if (!empty($filters['status_id']))              $q->where('requisition_status_id',   $filters['status_id']);
-        if (!empty($filters['procurement_type_id']))    $q->where('procurement_type_id',     $filters['procurement_type_id']);
-        if (!empty($filters['procurement_method_id']))  $q->where('procurement_method_id',   $filters['procurement_method_id']);
-        if (!empty($filters['lc_status_id']))           $q->where('lc_status_id',            $filters['lc_status_id']);
-
-        // date range (created_at)
-        if (!empty($filters['date_from'])) $q->whereDate('created_at', '>=', $filters['date_from']);
-        if (!empty($filters['date_to']))   $q->whereDate('created_at', '<=', $filters['date_to']);
-
-        $requisitions = $q->orderByDesc('created_at')
-            ->paginate(10)
-            ->withQueryString(); // keep filters on next pages
-
-        return view('requisitions.index', [
-            'requisitions' => $requisitions,
-            'filters'      => $filters,
-            'statuses'     => RequisitionStatus::orderBy('name')->get(),
-            'types'        => ProcurementType::orderBy('name')->get(),
-            'methods'      => ProcurementMethod::orderBy('name')->get(),
-            'lcStatuses'   => LcStatus::orderBy('name')->get(),
-        ]);
+    // per-page (defaults to 25). Clamp to safe values.
+    $perPage = (int) $request->input('per_page', 25);
+    $allowed = [10,25,50,100,200];
+    if (!in_array($perPage, $allowed, true)) {
+        $perPage = 25;
     }
+
+    $q = Requisition::query()
+        ->with(['package','status','procurementType','method','lcStatus']);
+
+    if (!empty($filters['k'])) {
+        $k = '%'.$filters['k'].'%';
+        $q->where(function($x) use ($k){
+            $x->where('package_no','like',$k)
+              ->orWhere('vendor_name','like',$k)
+              ->orWhere('description','like',$k);
+        });
+    }
+    if (!empty($filters['status_id']))             $q->where('requisition_status_id',  $filters['status_id']);
+    if (!empty($filters['procurement_type_id']))   $q->where('procurement_type_id',    $filters['procurement_type_id']);
+    if (!empty($filters['procurement_method_id'])) $q->where('procurement_method_id',  $filters['procurement_method_id']);
+    if (!empty($filters['lc_status_id']))          $q->where('lc_status_id',           $filters['lc_status_id']);
+    if (!empty($filters['date_from']))             $q->whereDate('created_at','>=',$filters['date_from']);
+    if (!empty($filters['date_to']))               $q->whereDate('created_at','<=',$filters['date_to']);
+
+    $requisitions = $q->orderByDesc('created_at')
+        ->paginate($perPage)
+        ->withQueryString();
+
+    return view('requisitions.index', [
+        'requisitions' => $requisitions,
+        'filters'      => $filters,
+        'statuses'     => RequisitionStatus::orderBy('name')->get(),
+        'types'        => ProcurementType::orderBy('name')->get(),
+        'methods'      => ProcurementMethod::orderBy('name')->get(),
+        'lcStatuses'   => LcStatus::orderBy('name')->get(),
+        'perPage'      => $perPage,
+        'allowedPerPage' => $allowed,
+    ]);
+}
 }

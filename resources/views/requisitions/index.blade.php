@@ -57,19 +57,21 @@
         </div>
 
         <div class="col-md-2">
-          <input type="date" name="date_from" class="form-control" value="{{ $filters['date_from'] ?? '' }}" placeholder="From">
+          <label for="date_from" class="form-label">Start Date</label>
+          <input type="date" id="date_from" name="date_from" class="form-control" value="{{ $filters['date_from'] ?? '' }}">
         </div>
         <div class="col-md-2">
-          <input type="date" name="date_to" class="form-control" value="{{ $filters['date_to'] ?? '' }}" placeholder="To">
+          <label for="date_to" class="form-label">End Date</label>
+          <input type="date" id="date_to" name="date_to" class="form-control" value="{{ $filters['date_to'] ?? '' }}">
         </div>
 
         <div class="col-md-2">
-          <button class="btn btn-outline-secondary w-100" type="submit">
+          <button class="btn btn-outline-secondary w-100" type="submit" style="margin-top:28px">
             <i class="fas fa-filter me-1"></i> Search
           </button>
         </div>
         <div class="col-md-2">
-          <a href="{{ route('requisitions.index') }}" class="btn btn-outline-dark w-100">Reset</a>
+          <a href="{{ route('requisitions.index') }}" class="btn btn-outline-dark w-100" style="margin-top:28px">Reset</a>
         </div>
       </form>
 
@@ -77,7 +79,7 @@
       <div class="table-responsive">
         <table id="packagesTable" class="table table-flush align-items-center mb-0" style="width:100%">
           <thead class="thead-light">
-            <tr >
+            <tr>
               <th class="text-center">Package ID</th>
               <th class="text-center">Package No</th>
               <th class="text-center">Description</th>
@@ -87,70 +89,44 @@
               <th class="text-center">Department</th>
               <th class="text-center">Type of Procurement</th>
               <th class="text-center">Assigned Officer</th>
-              <!-- <th>Created</th> -->
               <th class="text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
-  @foreach($requisitions as $r)
-    <tr class="text-center">
-      {{-- Package ID --}}
-      <td class="text-center">{{ $r->package->package_id ?? '—' }}</td>
-
-      {{-- Package No --}}
-      <td class="text-center">{{ $r->package_no ?? '—' }}</td>
-
-      {{-- Description --}}
-      <td style="max-width:320px" class="text-center">{{ $r->description ?? '—' }}</td>
-
-      {{-- Procurement Method --}}
-      <td class="text-center">{{ $r->method->name ?? '—' }}</td>
-
-      {{-- Requisition Status --}}
-      <td class="text-center">{{ $r->status->name ?? '—' }}</td>
-
-      {{-- Vendor Name --}}
-      <td class="text-center">{{ $r->vendor_name ?? '—' }}</td>
-
-      {{-- Department --}}
-      <td class="text-center">{{ $r->department->name ?? '—' }}</td>
-
-      {{-- Type of Procurement --}}
-      <td class="text-center">{{ $r->procurementType->name ?? '—' }}</td>
-
-      {{-- Assigned Officer (officer_name column) --}}
-      <td class="text-center">{{ $r->officer_name ?? '—' }}</td>
-
-      {{-- Created Date --}}
-      <!-- <td>{{ optional($r->created_at)->format('Y-m-d') }}</td> -->
-
-      {{-- Actions --}}
-      <td class="text-cebter">
-        <a href="{{ route('requisitions.show', $r) }}" class="btn btn-link text-secondary px-2 mb-0">
-          <i class="fas fa-eye me-1"></i> View
-        </a>
-        <a href="{{ route('requisitions.edit', $r) }}" class="btn btn-link text-primary px-2 mb-0">
-          <i class="fas fa-edit me-1"></i> Edit
-        </a>
-        <form action="{{ route('requisitions.destroy', $r) }}" method="POST" class="d-inline"
-              onsubmit="return confirm('Delete this requisition?');">
-          @csrf @method('DELETE')
-          <button class="btn btn-link text-danger px-2 mb-0" type="submit">
-            <i class="fas fa-trash me-1"></i> Delete
-          </button>
-        </form>
-      </td>
-    </tr>
-  @endforeach
-</tbody>
-
+            @foreach($requisitions as $r)
+              <tr class="text-center">
+                <td class="text-center">{{ $r->package->package_id ?? '—' }}</td>
+                <td class="text-center">{{ $r->package_no ?? '—' }}</td>
+                <td style="max-width:320px" class="text-center">{{ $r->description ?? '—' }}</td>
+                <td class="text-center">{{ $r->method->name ?? '—' }}</td>
+                <td class="text-center">{{ $r->status->name ?? '—' }}</td>
+                <td class="text-center">{{ $r->vendor_name ?? '—' }}</td>
+                <td class="text-center">{{ $r->department->name ?? '—' }}</td>
+                <td class="text-center">{{ $r->procurementType->name ?? '—' }}</td>
+                <td class="text-center">{{ $r->officer_name ?? '—' }}</td>
+                <td class="text-center">
+                  <a href="{{ route('requisitions.show', $r) }}" class="btn btn-link text-secondary px-2 mb-0">
+                    <i class="fas fa-eye me-1"></i> View
+                  </a>
+                  <a href="{{ route('requisitions.edit', $r) }}" class="btn btn-link text-primary px-2 mb-0">
+                    <i class="fas fa-edit me-1"></i> Edit
+                  </a>
+                  <form action="{{ route('requisitions.destroy', $r) }}" method="POST" class="d-inline"
+                        onsubmit="return confirm('Delete this requisition?');">
+                    @csrf @method('DELETE')
+                    <button class="btn btn-link text-danger px-2 mb-0" type="submit">
+                      <i class="fas fa-trash me-1"></i> Delete
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            @endforeach
+          </tbody>
         </table>
       </div>
 
-      {{-- Optional: if you rely on DataTables paging, remove Laravel paginator below --}}
-      {{-- <div class="mt-3 px-3">
-        {{ $requisitions->links() }}
-      </div> --}}
+      {{-- No Laravel paginator here (DataTables handles paging) --}}
+
     </div>
   </div>
 </div>
@@ -163,18 +139,15 @@
 <script>
   $(function () {
     $('#packagesTable').DataTable({
-      order: [[6, 'desc']],                // sort by Created (7th col index = 6)
+      order: [[1, 'asc']],           // sort by Package No
       pageLength: 10,
-       searching: false,  
       lengthMenu: [10, 25, 50, 100],
+      searching: false,              // search bar hidden (you have server-side filters)
       columnDefs: [
-        { targets: 7, orderable: false, className: 'text-end align-middle' }, // Actions
-        { targets: 5, className: 'text-end align-middle' },                   // Est. Cost align right
-        { targets: [0,1,2,3,4,6], className: 'align-middle' }
+        { targets: 9, orderable: false, className: 'text-center align-middle' }, // Actions column
+        { targets: [0,1,2,3,4,5,6,7,8], className: 'text-center align-middle' }
       ],
       language: {
-        // search: 'Search:',
-        // searchPlaceholder: 'Package ID / Package No...',
         emptyTable: 'No requisitions found.',
         zeroRecords: 'No matching requisitions.'
       }
