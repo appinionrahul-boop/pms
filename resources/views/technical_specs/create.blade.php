@@ -48,6 +48,12 @@
           <input type="text" name="spec_name" class="form-control" value="{{ old('spec_name') }}" required>
         </div>
 
+        {{-- ✅ ERP Code --}}
+        <div class="mb-3">
+          <label class="form-label">ERP Code</label>
+          <input type="text" name="erp_code" class="form-control" value="{{ old('erp_code') }}">
+        </div>
+
         <div class="row mb-3">
           <div class="col-md-4">
             <label class="form-label">Qty / Nos.</label>
@@ -59,8 +65,9 @@
           </div>
           <div class="col-md-4">
             <label class="form-label">Total Price (BDT)</label>
-            <input type="number" step="0.01" name="total_price_bdt" class="form-control" value="{{ old('total_price_bdt') }}">
-            <small class="text-muted">If empty, we’ll auto-calc Qty × Unit Price.</small>
+            <input type="number" step="0.01" id="total_price_bdt" name="total_price_bdt" 
+                  class="form-control" value="{{ old('total_price_bdt') }}" readonly>
+            <small class="text-muted">Auto-calculated as Qty × Unit Price.</small>
           </div>
         </div>
 
@@ -71,4 +78,17 @@
     </div>
   </div>
 </div>
+<script>
+  function calcTotal() {
+    let qty  = parseFloat(document.querySelector('[name="quantity"]').value) || 0;
+    let unit = parseFloat(document.querySelector('[name="unit_price_bdt"]').value) || 0;
+    document.getElementById('total_price_bdt').value = (qty * unit).toFixed(2);
+  }
+
+  document.querySelector('[name="quantity"]').addEventListener('input', calcTotal);
+  document.querySelector('[name="unit_price_bdt"]').addEventListener('input', calcTotal);
+
+  // run on load in case old values exist
+  window.addEventListener('DOMContentLoaded', calcTotal);
+</script>
 @endsection

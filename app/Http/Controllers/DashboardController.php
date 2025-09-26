@@ -17,46 +17,52 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         // ---------------------------------------------
-        // Filters
+        // Filters: start & end (YYYY-MM-DD from the view)
         // ---------------------------------------------
-        $allowedYears = [2024, 2025, 2026, 2027, 2028];
+        // Raw strings for the view <input type="date"> values
+        $start = $request->input('start'); // e.g., 2025-01-01 or null
+        $end   = $request->input('end');   // e.g., 2025-03-31 or null
 
-        $monthInput = $request->input('month'); // 1..12 or empty
-        $yearInput  = $request->input('year');  // 2025..2028 or empty
+        // Parse into Carbon for querying (inclusive by day)
+        $startDate = null;
+        $endDate   = null;
 
-        $usePeriod = false;
-        $start = null;
-        $end   = null;
-
-        if ($yearInput && in_array((int)$yearInput, $allowedYears)) {
-            $year = (int)$yearInput;
-
-            if (!empty($monthInput)) {
-                // Year + Month -> that month of the year
-                $month = max(1, min(12, (int)$monthInput));
-                $start = Carbon::create($year, $month, 1)->startOfMonth();
-                $end   = Carbon::create($year, $month, 1)->endOfMonth();
-            } else {
-                // Year only -> full year
-                $start = Carbon::create($year, 1, 1)->startOfYear();
-                $end   = Carbon::create($year, 12, 31)->endOfYear();
-            }
-            $usePeriod = true;
+        if (!empty($start)) {
+            try { $startDate = Carbon::parse($start)->startOfDay(); } catch (\Throwable $e) {}
+        }
+        if (!empty($end)) {
+            try { $endDate = Carbon::parse($end)->endOfDay(); } catch (\Throwable $e) {}
         }
 
-        // Choose the date column to filter by (change if you have a business date)
+        // If both set but out of order, swap
+        if ($startDate && $endDate && $endDate->lt($startDate)) {
+            [$startDate, $endDate] = [$endDate->copy()->startOfDay(), $startDate->copy()->endOfDay()];
+            // Also swap the raw strings so the form reflects the swap
+            [$start, $end] = [optional($startDate)->toDateString(), optional($endDate)->toDateString()];
+        }
+
+        // Choose the date column to filter by (adjust if needed)
         $dateColumn = 'created_at';
 
-        // Helper: apply optional date filter
-        $withPeriod = function ($query) use ($usePeriod, $dateColumn, $start, $end) {
-            return $usePeriod ? $query->whereBetween($dateColumn, [$start, $end]) : $query;
+        // Helper: apply optional date filter (handles 3 cases)
+        $withPeriod = function ($query) use ($dateColumn, $startDate, $endDate) {
+            if ($startDate && $endDate) {
+                return $query->whereBetween($dateColumn, [$startDate, $endDate]);
+            } elseif ($startDate) {
+                return $query->where($dateColumn, '>=', $startDate);
+            } elseif ($endDate) {
+                return $query->where($dateColumn, '<=', $endDate);
+            }
+            return $query; // no filter
         };
 
         // ---------------------------------------------
         // KPIs
         // ---------------------------------------------
         $packagesTotal = $withPeriod(Package::query())->count();
+
         $requisitionsTotal = $withPeriod(Requisition::query())->count();
+
         $packagesWithoutReqTotal = $withPeriod(Package::query())
             ->doesntHave('requisitions')
             ->count();
@@ -78,20 +84,24 @@ class DashboardController extends Controller
         $contractSignedCount = $countByStatus('Contract Signed');
         $deliveredCount      = $countByStatus('Delivered');
 
-        // Tender Opened (handle common casing variants)
+        // Tender Opened (case variants safe-guard)
         $tenderOpenedName = collect(['Tender Opened', 'tender opened', 'Tender opened'])
             ->first(fn ($n) => isset($statusIds[$n])) ?? 'Tender Opened';
         $tenderOpenedCount = $countByStatus($tenderOpenedName);
 
         // ---------------------------------------------
-        // Status-wise table (include 0 via LEFT JOIN)
+        // Status-wise table (include zeros via LEFT JOIN)
         // ---------------------------------------------
         $statusCounts = RequisitionStatus::query()
             ->select('requisition_statuses.id', 'requisition_statuses.name', DB::raw('COUNT(r.id) AS total'))
-            ->leftJoin('requisitions as r', function ($join) use ($usePeriod, $dateColumn, $start, $end) {
+            ->leftJoin('requisitions as r', function ($join) use ($dateColumn, $startDate, $endDate) {
                 $join->on('r.requisition_status_id', '=', 'requisition_statuses.id');
-                if ($usePeriod) {
-                    $join->whereBetween("r.$dateColumn", [$start, $end]);
+                if ($startDate && $endDate) {
+                    $join->whereBetween("r.$dateColumn", [$startDate, $endDate]);
+                } elseif ($startDate) {
+                    $join->where("r.$dateColumn", '>=', $startDate);
+                } elseif ($endDate) {
+                    $join->where("r.$dateColumn", '<=', $endDate);
                 }
             })
             ->groupBy('requisition_statuses.id', 'requisition_statuses.name')
@@ -99,14 +109,18 @@ class DashboardController extends Controller
             ->get();
 
         // ---------------------------------------------
-        // Department-wise table (include 0 via LEFT JOIN)
+        // Department-wise table (include zeros via LEFT JOIN)
         // ---------------------------------------------
         $departmentCounts = Department::query()
             ->select('departments.id', 'departments.name', DB::raw('COUNT(r.id) AS total'))
-            ->leftJoin('requisitions as r', function ($join) use ($usePeriod, $dateColumn, $start, $end) {
+            ->leftJoin('requisitions as r', function ($join) use ($dateColumn, $startDate, $endDate) {
                 $join->on('r.department_id', '=', 'departments.id');
-                if ($usePeriod) {
-                    $join->whereBetween("r.$dateColumn", [$start, $end]);
+                if ($startDate && $endDate) {
+                    $join->whereBetween("r.$dateColumn", [$startDate, $endDate]);
+                } elseif ($startDate) {
+                    $join->where("r.$dateColumn", '>=', $startDate);
+                } elseif ($endDate) {
+                    $join->where("r.$dateColumn", '<=', $endDate);
                 }
             })
             ->groupBy('departments.id', 'departments.name')
@@ -114,14 +128,18 @@ class DashboardController extends Controller
             ->get();
 
         // ---------------------------------------------
-        // Procurement Type-wise table (include 0 via LEFT JOIN)
+        // Procurement Type-wise table (include zeros via LEFT JOIN)
         // ---------------------------------------------
         $typeCounts = ProcurementType::query()
             ->select('procurement_types.id', 'procurement_types.name', DB::raw('COUNT(r.id) AS total'))
-            ->leftJoin('requisitions as r', function ($join) use ($usePeriod, $dateColumn, $start, $end) {
+            ->leftJoin('requisitions as r', function ($join) use ($dateColumn, $startDate, $endDate) {
                 $join->on('r.procurement_type_id', '=', 'procurement_types.id');
-                if ($usePeriod) {
-                    $join->whereBetween("r.$dateColumn", [$start, $end]);
+                if ($startDate && $endDate) {
+                    $join->whereBetween("r.$dateColumn", [$startDate, $endDate]);
+                } elseif ($startDate) {
+                    $join->where("r.$dateColumn", '>=', $startDate);
+                } elseif ($endDate) {
+                    $join->where("r.$dateColumn", '<=', $endDate);
                 }
             })
             ->groupBy('procurement_types.id', 'procurement_types.name')
@@ -129,15 +147,12 @@ class DashboardController extends Controller
             ->get();
 
         // ---------------------------------------------
-        // Labels for the view
+        // Return to view
+        // $start / $end are strings for the form and label
         // ---------------------------------------------
-        $month = $usePeriod && !empty($monthInput) ? (int)$monthInput : null; // null means "All months"
-        $year  = $usePeriod ? (int)$yearInput : null;                          // null means "All time"
-        $monthName = $month ? Carbon::create(null, $month, 1)->format('F') : 'All Months';
-
         return view('dashboard', compact(
-            // filters/labels
-            'month', 'year', 'monthName', 'allowedYears',
+            // filters (strings for inputs/labels)
+            'start', 'end',
 
             // KPIs
             'packagesTotal', 'requisitionsTotal', 'packagesWithoutReqTotal',

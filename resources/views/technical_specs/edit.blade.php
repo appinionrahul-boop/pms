@@ -48,6 +48,11 @@
             <input type="number" step="0.01" name="total_price_bdt" class="form-control" value="{{ old('total_price_bdt',$spec->total_price_bdt) }}">
             <small class="text-muted">If empty, we’ll auto-calc Qty × Unit Price.</small>
           </div>
+          <div class="mb-3">
+            <label class="form-label">ERP Code</label>
+            <input type="text" name="erp_code" class="form-control"
+                  value="{{ old('erp_code', $spec->erp_code) }}">
+          </div>
         </div>
 
         <div class="d-flex justify-content-end">

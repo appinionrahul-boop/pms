@@ -1,42 +1,27 @@
 @extends('layouts.user_type.auth')
 
 @section('content')
-
 @php
-  // Month labels for the dropdown
-  $months = [
-    1=>'January',2=>'February',3=>'March',4=>'April',5=>'May',6=>'June',
-    7=>'July',8=>'August',9=>'September',10=>'October',11=>'November',12=>'December'
-  ];
-
-  // Selected values coming from controller; when lifetime, they may be null
-  $selMonth = $month ?? null;  // null = All Months
-  $selYear  = $year  ?? null;  // null = All time
+  $selStart = $start ?? null;
+  $selEnd   = $end ?? null;
 @endphp
 
-{{-- ===== Filters: Year (required), Month (optional) ===== --}}
+{{-- ===== Filters: Start Date & End Date ===== --}}
 <form method="GET" action="{{ route('dashboard') }}" class="mb-4">
   <div class="row gx-2 gy-2 align-items-end">
 
-    {{-- Month (optional) --}}
+    {{-- Start Date --}}
     <div class="col-12 col-md-3">
-      <label class="form-label mb-1 text-center">Month</label>
-      <select name="month" class="form-select control-eq">
-        <option value="" {{ empty($selMonth) ? 'selected' : '' }}>All Months</option>
-        @foreach ($months as $mVal => $mLabel)
-          <option value="{{ $mVal }}" @selected((int)$selMonth === (int)$mVal)>{{ $mLabel }}</option>
-        @endforeach
-      </select>
+      <label class="form-label mb-1">Start Date</label>
+      <input type="date" name="start" class="form-control control-eq"
+             value="{{ $selStart }}">
     </div>
 
-    {{-- Year (required, 2025–2028) --}}
+    {{-- End Date --}}
     <div class="col-12 col-md-3">
-      <label class="form-label mb-1">Year</label>
-      <select name="year" class="form-select control-eq" required>
-        @foreach (($allowedYears ?? [2025, 2026, 2027, 2028]) as $y)
-          <option value="{{ $y }}" @selected((int)$selYear === (int)$y)>{{ $y }}</option>
-        @endforeach
-      </select>
+      <label class="form-label mb-1">End Date</label>
+      <input type="date" name="end" class="form-control control-eq"
+             value="{{ $selEnd }}">
     </div>
 
     {{-- Apply --}}
@@ -57,8 +42,39 @@
 {{-- Current filter label --}}
 <p class="text-muted mb-4">
   Showing data for
-  @if (empty($selYear))
+  @if (empty($selStart) && empty($selEnd))
     <strong>All time</strong>
+  @elseif (!empty($selStart) && !empty($selEnd))
+    <strong>{{ \Carbon\Carbon::parse($selStart)->format('d M Y') }}</strong>
+    –
+    <strong>{{ \Carbon\Carbon::parse($selEnd)->format('d M Y') }}</strong>
+  @elseif (!empty($selStart))
+    from <strong>{{ \Carbon\Carbon::parse($selStart)->format('d M Y') }}</strong>
+    onwards
+  @elseif (!empty($selEnd))
+    until <strong>{{ \Carbon\Carbon::parse($selEnd)->format('d M Y') }}</strong>
+  @endif
+</p>
+
+{{-- (keep the rest of your KPI cards, tables, etc. unchanged) --}}
+
+{{-- Equalize control heights --}}
+<style>
+  .control-eq{
+    min-height: 52px;
+    font-size: 1rem;
+  }
+  .control-eq.form-select, .control-eq.form-control{
+    padding-top: .65rem;
+    padding-bottom: .65rem;
+  }
+</style>
+
+{{-- Current filter label --}}
+<p class="text-muted mb-4">
+  
+  @if (empty($selYear))
+    <!-- <strong>All time</strong> -->
   @elseif (empty($selMonth))
     <strong>All {{ $selYear }}</strong>
   @else

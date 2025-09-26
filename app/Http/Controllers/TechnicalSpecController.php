@@ -5,35 +5,48 @@ namespace App\Http\Controllers;
 use App\Models\Package;
 use App\Models\Requisition;
 use App\Models\TechnicalSpec;
+use App\Models\Notificaton;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TechnicalSpecController extends Controller
 {
     // Index: Package list with first requisition created date (if any), filter by package id/no
+
+
 public function index(Request $request)
 {
     $q = trim((string) $request->get('q', ''));
 
-    $packages = Package::query()
-        ->with([
-            'requisitions' => function ($x) {
-                $x->select('id', 'package_id', 'description', 'created_at')  // ← added description
-                  ->orderBy('created_at');
-            }
-        ])
-        ->when($q !== '', function ($x) use ($q) {
-            $x->where(function ($y) use ($q) {
-                $y->where('package_id', 'like', "%{$q}%")
-                  ->orWhere('package_no', 'like', "%{$q}%");
-            });
-        })
-        ->whereHas('technicalSpecs') // keep/remove as you need
-        ->orderByDesc('id')
-        ->paginate(10)
-        ->withQueryString();
+    $specs = DB::table('technical_specs as ts')
+    ->join('packages as p', 'ts.package_id', '=', 'p.id')
+    ->select([
+        'ts.id as spec_id',          // <-- REQUIRED for edit/delete routes
+        'p.package_id',
+        'p.package_no',
+        'p.description',
+        'ts.erp_code',
+        'ts.spec_name',
+        'ts.quantity',
+        'ts.unit_price_bdt',
+        'ts.total_price_bdt',
+    ])
+    ->when($q !== '', function ($x) use ($q) {
+        $x->where(function ($y) use ($q) {
+            $y->where('p.package_id', 'like', "%{$q}%")
+              ->orWhere('p.package_no', 'like', "%{$q}%")
+              ->orWhere('ts.spec_name', 'like', "%{$q}%")
+              ->orWhere('ts.erp_code', 'like', "%{$q}%");
+        });
+    })
+    ->orderByDesc('p.id')
+    ->get();
 
-    return view('technical_specs.index', compact('packages', 'q'));
+    return view('technical_specs.index', ['specs' => $specs, 'q' => $q]);
+
 }
+
 
 
     // Details: all specs for a given package
@@ -57,26 +70,41 @@ public function index(Request $request)
     }
 
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'package_id'      => ['required','exists:packages,id'],
-            'spec_name'       => ['required','string','max:255'],
-            'quantity'        => ['nullable','numeric','min:0'],
-            'unit_price_bdt'  => ['nullable','numeric','min:0'],
-            'total_price_bdt' => ['nullable','numeric','min:0'],
-        ]);
+{
+    $validated = $request->validate([
+        'package_id'      => ['required', 'exists:packages,id'],
+        'spec_name'       => ['required', 'string', 'max:255'],
+        'quantity'        => ['nullable', 'numeric', 'min:0'],
+        'unit_price_bdt'  => ['nullable', 'numeric', 'min:0'],
+        'total_price_bdt' => ['nullable', 'numeric', 'min:0'],
+        'erp_code'        => ['nullable', 'string', 'max:100'], // ✅ fixed
+    ]);
 
-        // If total not given, compute qty*unit
-        if (empty($validated['total_price_bdt']) && !empty($validated['quantity']) && !empty($validated['unit_price_bdt'])) {
-            $validated['total_price_bdt'] = (float)$validated['quantity'] * (float)$validated['unit_price_bdt'];
-        }
+    // Normalize numeric fields
+    $validated['quantity']        = $validated['quantity'] ?? 0;
+    $validated['unit_price_bdt']  = $validated['unit_price_bdt'] ?? 0;
+    $validated['total_price_bdt'] = $validated['total_price_bdt'] ?? 0;
 
-        TechnicalSpec::create($validated);
-
-        return redirect()
-            ->route('techspecs.show', $validated['package_id'])
-            ->with('success', 'Technical specification added.');
+    // If total not given, compute qty * unit
+    if (empty($request->total_price_bdt) && $validated['quantity'] > 0 && $validated['unit_price_bdt'] > 0) {
+        $validated['total_price_bdt'] = (float) $validated['quantity'] * (float) $validated['unit_price_bdt'];
     }
+
+    TechnicalSpec::create($validated);
+    $pkg = Package::find($validated['package_id']);
+    $userName = Auth::user()->name ?? 'System';
+
+    Notificaton::create([
+        'text' => "Package No {$pkg->package_no} technical spec '{$validated['spec_name']}' has been created by {$userName}.",
+         'is_seen' => false,
+    ]);
+
+
+    return redirect()
+        ->route('techspecs.index')
+        ->with('success', 'Technical specification added successfully.');
+}
+
 
     public function edit(TechnicalSpec $spec)
     {
@@ -93,6 +121,7 @@ public function index(Request $request)
             'quantity'        => ['nullable','numeric','min:0'],
             'unit_price_bdt'  => ['nullable','numeric','min:0'],
             'total_price_bdt' => ['nullable','numeric','min:0'],
+              'erp_code' => ['nullable','string','min:0'],
         ]);
 
         if (empty($validated['total_price_bdt']) && !empty($validated['quantity']) && !empty($validated['unit_price_bdt'])) {
@@ -100,19 +129,34 @@ public function index(Request $request)
         }
 
         $spec->update($validated);
+        $userName = Auth::user()->name ?? 'System';
+
+        $pkg = Package::find($validated['package_id']);
+        Notificaton::create([
+            'text' => "Package No {$pkg->package_no} technical spec '{$validated['spec_name']}' has been updated by {$userName}.",
+            'is_seen' => false,
+        ]);
 
         return redirect()
-            ->route('techspecs.show', $validated['package_id'])
+            ->route('techspecs.index')
             ->with('success', 'Technical specification updated.');
     }
 
     public function destroy(TechnicalSpec $spec)
     {
-        $packageId = $spec->package_id;
+        $pkg  = Package::find($spec->package_id);
+        $name = $spec->spec_name;
+        $userName = Auth::user()->name ?? 'System';
+
         $spec->delete();
 
+        Notificaton::create([
+            'text' => "Package No {$pkg->package_no} technical spec '{$name}' has been deleted by {$userName}.",
+            'is_seen' => false,
+        ]);
+
         return redirect()
-            ->route('techspecs.show', $packageId)
+            ->route('techspecs.index')
             ->with('success', 'Technical specification deleted.');
     }
 }

@@ -12,7 +12,8 @@ use App\Models\{
     RequisitionStatus,
     ApprovingAuthority,
     LcStatus,
-    Officer
+    Officer,
+    Notificaton
 };
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -108,6 +109,13 @@ class RequisitionController extends Controller
         if ($techPath) {
             Excel::import(new TechnicalSpecsImport($req->package_id), storage_path("app/public/{$techPath}"));
         }
+
+         // --- NEW: Notification on create ---
+        $userName = optional(auth()->user())->name ?? 'System';
+        Notificaton::create([
+            'text'    => "Package No {$req->package_no} requisition has been created by {$userName}.",
+            'is_seen' => false,
+        ]);
 
         return redirect()->route('packages.index')
             ->with('success', 'Requisition submitted. Package removed from the list.');
@@ -210,6 +218,13 @@ class RequisitionController extends Controller
         $requisition->fill($request->except(['reference_annex','tech_spec']));
         $requisition->save();
 
+         // --- NEW: Notification on update ---
+        $userName = optional(auth()->user())->name ?? 'System';
+        Notificaton::create([
+            'text'    => "Package No {$requisition->package_no} requisition has been updated by {$userName}.",
+            'is_seen' => false,
+        ]);
+
         return redirect()->route('requisitions.show', $requisition)
             ->with('success','Requisition updated successfully.');
     }
@@ -308,4 +323,30 @@ class RequisitionController extends Controller
         'allowedPerPage' => $allowed,
     ]);
 }
+   public function destroy(Requisition $requisition)
+{
+    try {
+        // capture before delete
+        $pkgNo = $requisition->package_no;
+
+        $requisition->delete();
+
+        // save notification
+        $userName = optional(auth()->user())->name ?? 'System';
+        \App\Models\Notificaton::create([
+            'text'    => "Package No {$pkgNo} requisition has been deleted by {$userName}.",
+            'is_seen' => false,
+        ]);
+
+        return redirect()
+            ->route('requisitions.index')
+            ->with('success', 'Requisition deleted successfully.');
+    } catch (\Exception $e) {
+        return redirect()
+            ->route('requisitions.index')
+            ->with('error', 'Failed to delete requisition: ' . $e->getMessage());
+    }
+}
+
+
 }

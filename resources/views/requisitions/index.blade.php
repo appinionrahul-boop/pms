@@ -14,66 +14,85 @@
 
       {{-- Filters --}}
       <form method="GET" action="{{ route('requisitions.index') }}" class="row g-2 mb-3">
-        <div class="col-md-3">
-          <input type="text" name="k" class="form-control"
-                 value="{{ $filters['k'] ?? '' }}"
-                 placeholder="Search (Package No / Vendor / Description)">
-        </div>
+          {{-- Keyword Search --}}
+          <div class="col-md-3">
+            <label for="k" class="form-label">Keyword</label>
+            <input type="text" id="k" name="k" class="form-control"
+                  value="{{ $filters['k'] ?? '' }}"
+                  placeholder="Search (Package No / Vendor / Description)">
+          </div>
 
-        <div class="col-md-2">
-          <select name="status_id" class="form-control">
-            <option value=""> Requisition Status</option>
-            @foreach($statuses as $s)
-              <option value="{{ $s->id }}" @selected(($filters['status_id'] ?? null) == $s->id)>{{ $s->name }}</option>
-            @endforeach
-          </select>
-        </div>
+          {{-- Status --}}
+          <div class="col-md-2">
+            <label for="status_id" class="form-label">Requisition Status</label>
+            <select id="status_id" name="status_id" class="form-control">
+              <option value="">All</option>
+              @foreach($statuses as $s)
+                <option value="{{ $s->id }}" @selected(($filters['status_id'] ?? null) == $s->id)>{{ $s->name }}</option>
+              @endforeach
+            </select>
+          </div>
 
-        <div class="col-md-2">
-          <select name="procurement_type_id" class="form-control">
-            <option value="">Type</option>
-            @foreach($types as $t)
-              <option value="{{ $t->id }}" @selected(($filters['procurement_type_id'] ?? null) == $t->id)>{{ $t->name }}</option>
-            @endforeach
-          </select>
-        </div>
+          {{-- Procurement Type --}}
+          <div class="col-md-2">
+            <label for="procurement_type_id" class="form-label">Procurement Type</label>
+            <select id="procurement_type_id" name="procurement_type_id" class="form-control">
+              <option value="">All</option>
+              @foreach($types as $t)
+                <option value="{{ $t->id }}" @selected(($filters['procurement_type_id'] ?? null) == $t->id)>{{ $t->name }}</option>
+              @endforeach
+            </select>
+          </div>
 
-        <div class="col-md-2">
-          <select name="procurement_method_id" class="form-control">
-            <option value="">Method</option>
-            @foreach($methods as $m)
-              <option value="{{ $m->id }}" @selected(($filters['procurement_method_id'] ?? null) == $m->id)>{{ $m->name }}</option>
-            @endforeach
-          </select>
-        </div>
+          {{-- Procurement Method --}}
+          <div class="col-md-2">
+            <label for="procurement_method_id" class="form-label">Procurement Method</label>
+            <select id="procurement_method_id" name="procurement_method_id" class="form-control">
+              <option value="">All</option>
+              @foreach($methods as $m)
+                <option value="{{ $m->id }}" @selected(($filters['procurement_method_id'] ?? null) == $m->id)>{{ $m->name }}</option>
+              @endforeach
+            </select>
+          </div>
 
-        <div class="col-md-2">
-          <select name="lc_status_id" class="form-control">
-            <option value="">LC Status</option>
-            @foreach($lcStatuses as $l)
-              <option value="{{ $l->id }}" @selected(($filters['lc_status_id'] ?? null) == $l->id)>{{ $l->name }}</option>
-            @endforeach
-          </select>
-        </div>
+          {{-- LC Status --}}
+          <div class="col-md-2">
+            <label for="lc_status_id" class="form-label">LC Status</label>
+            <select id="lc_status_id" name="lc_status_id" class="form-control">
+              <option value="">All</option>
+              @foreach($lcStatuses as $l)
+                <option value="{{ $l->id }}" @selected(($filters['lc_status_id'] ?? null) == $l->id)>{{ $l->name }}</option>
+              @endforeach
+            </select>
+          </div>
 
-        <div class="col-md-2">
-          <label for="date_from" class="form-label">Start Date</label>
-          <input type="date" id="date_from" name="date_from" class="form-control" value="{{ $filters['date_from'] ?? '' }}">
-        </div>
-        <div class="col-md-2">
-          <label for="date_to" class="form-label">End Date</label>
-          <input type="date" id="date_to" name="date_to" class="form-control" value="{{ $filters['date_to'] ?? '' }}">
-        </div>
+          {{-- Start Date --}}
+          <div class="col-md-2">
+            <label for="date_from" class="form-label">Start Date</label>
+            <input type="date" id="date_from" name="date_from" class="form-control" value="{{ $filters['date_from'] ?? '' }}">
+          </div>
 
-        <div class="col-md-2">
-          <button class="btn btn-outline-secondary w-100" type="submit" style="margin-top:28px">
-            <i class="fas fa-filter me-1"></i> Search
-          </button>
-        </div>
-        <div class="col-md-2">
-          <a href="{{ route('requisitions.index') }}" class="btn btn-outline-dark w-100" style="margin-top:28px">Reset</a>
-        </div>
-      </form>
+          {{-- End Date --}}
+          <div class="col-md-2">
+            <label for="date_to" class="form-label">End Date</label>
+            <input type="date" id="date_to" name="date_to" class="form-control" value="{{ $filters['date_to'] ?? '' }}">
+          </div>
+
+          {{-- Search --}}
+          <div class="col-md-2 d-grid">
+            <label class="form-label invisible">Search</label>
+            <button class="btn btn-outline-secondary w-100" type="submit">
+              <i class="fas fa-filter me-1"></i> Search
+            </button>
+          </div>
+
+          {{-- Reset --}}
+          <div class="col-md-2 d-grid">
+            <label class="form-label invisible">Reset</label>
+            <a href="{{ route('requisitions.index') }}" class="btn btn-outline-dark w-100">Reset</a>
+          </div>
+        </form>
+
 
       {{-- Table --}}
       <div class="table-responsive">

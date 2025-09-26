@@ -181,7 +181,7 @@
         </div>
 
         <div class="d-flex justify-content-end">
-          <a href="{{ route('requisitions.show',$requisition) }}" class="btn btn-outline-secondary me-2">Cancel</a>
+          <a href="{{ route('requisitions.index',$requisition) }}" class="btn btn-outline-secondary me-2">Cancel</a>
           <button type="submit" class="btn bg-gradient-primary">Save Changes</button>
         </div>
       </form>

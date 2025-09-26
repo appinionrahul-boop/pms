@@ -14,6 +14,8 @@ use App\Http\Controllers\RequisitionController;
 use App\Http\Controllers\TechnicalSpecController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\NotificationController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -90,6 +92,33 @@ Route::group(['middleware' => 'auth'], function () {
     // Ajax feed for DataTables
    Route::get('/packages/download/excel', [PackageController::class, 'downloadExcel'])
      ->name('packages.download.excel');
+
+	 //User Management
+	 Route::get('/users/management', [UserManagementController::class, 'index'])
+        ->name('users.management');
+
+    // Create / Store
+    Route::get('/users/create', [UserManagementController::class, 'create'])
+        ->name('users.create');
+    Route::post('/users', [UserManagementController::class, 'store'])
+        ->name('users.store');
+
+    // Edit / Update
+    Route::get('/users/{user}/edit', [UserManagementController::class, 'edit'])
+        ->name('users.edit');
+    Route::put('/users/{user}', [UserManagementController::class, 'update'])
+        ->name('users.update');
+
+    // Password update (from modal)
+    Route::post('/users/{user}/password', [UserManagementController::class, 'updatePassword'])
+        ->name('users.password.update');
+
+    //Notification
+    Route::get('/notifications/list', [NotificationController::class, 'list'])
+    ->name('notifications.list'); // returns last 100 (HTML partial)
+
+    Route::post('/notifications/mark-all-seen', [NotificationController::class, 'markAllSeen'])
+    ->name('notifications.markAllSeen'); // marks all unseen -> seen
 	
 });
 

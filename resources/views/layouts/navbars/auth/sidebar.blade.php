@@ -158,6 +158,30 @@
     <span class="nav-link-text ms-1">Change Password</span>
   </a>
 </li>
+@auth
+  @if(Auth::user()->is_super == 1)
+    <li class="nav-item mt-2">
+      <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Administration</h6>
+    </li>
+    {{-- User Management --}}
+    <li class="nav-item">
+      <a class="nav-link {{ Request::is('users/management') ? 'active' : '' }}" href="{{ route('users.management') }}">
+        <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+          {{-- Inline SVG (users icon) --}}
+          <svg width="12px" height="12px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <g fill="none" fill-rule="evenodd">
+              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 
+              1.79-4 4 1.79 4 4 4zm0 2c-2.67 
+              0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" 
+              fill="#FFFFFF" class="color-background"></path>
+            </g>
+          </svg>
+        </div>
+        <span class="nav-link-text ms-1">User Management</span>
+      </a>
+    </li>
+  @endif
+@endauth
 
     
 
