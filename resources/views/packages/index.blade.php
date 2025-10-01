@@ -21,6 +21,10 @@
                 <i class="fas fa-file-upload me-1"></i> Bulk Upload (Excel)
               </button>
             </form>
+            {{-- Download Sample Excel --}}
+            <a href="{{ route('packages.sample') }}" class="btn btn-outline-secondary btn-sm">
+              <i class="fas fa-download me-1"></i> Sample Excel
+            </a>
 
             {{-- Add New --}}
             <a href="{{ route('packages.create') }}" class="btn bg-gradient-primary btn-sm">
@@ -41,6 +45,11 @@
               </button>
             </div>
             <div class="col-md-2">
+             
+                <a href="{{ route('packages.index') }}" class="btn btn-outline-dark w-100">Reset</a>
+           
+            </div>
+            <div class="col-md-2">
             </div>
           </form>
         </div>
@@ -56,7 +65,7 @@
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Description</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Procurement Method</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-end">Estimated Costs (BDT)</th>
-                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-end">Action</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ">Action</th>
                 </tr>
               </thead>
               <tbody>

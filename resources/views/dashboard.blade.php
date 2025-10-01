@@ -108,7 +108,7 @@
 </div>
 
 {{-- ===== 5 Status Cards ===== --}}
-<div class="row g-3 mb-4">
+<!-- <div class="row g-3 mb-4">
   <div class="col-md-2">
     <div class="card p-3 text-center">
       <div class="text-muted small text-center">Initiate</div>
@@ -139,7 +139,55 @@
       <div class="h4 m-0 text-center">{{ $deliveredCount }}</div>
     </div>
   </div>
+</div> -->
+{{-- ===== 5 Status Cards ===== --}}
+<div class="row g-3 mb-4">
+  {{-- Initiate --}}
+  <div class="col-md-2">
+    <div class="card p-3 text-center position-relative">
+      <a href="{{ route('requisitions.index', ['status_id' => $statusIds['Initiate'] ?? '']) }}" class="stretched-link"></a>
+      <div class="text-muted small text-center">Initiate</div>
+      <div class="h4 m-0 text-center">{{ $initiateCount }}</div>
+    </div>
+  </div>
+
+  {{-- Tender Opened --}}
+  <div class="col-md-3">
+    <div class="card p-3 text-center position-relative">
+      <a href="{{ route('requisitions.index', ['status_id' => $statusIds['Tender Opened'] ?? '']) }}" class="stretched-link"></a>
+      <div class="text-muted small text-center">Tender Opened</div>
+      <div class="h4 m-0 text-center">{{ $tenderOpenedCount }}</div>
+    </div>
+  </div>
+
+  {{-- Evaluation Completed --}}
+  <div class="col-md-3">
+    <div class="card p-3 text-center position-relative">
+      <a href="{{ route('requisitions.index', ['status_id' => $statusIds['Evaluation Completed'] ?? '']) }}" class="stretched-link"></a>
+      <div class="text-muted small text-center">Evaluation Completed</div>
+      <div class="h4 m-0 text-center">{{ $evaluationCount }}</div>
+    </div>
+  </div>
+
+  {{-- Contract Signed --}}
+  <div class="col-md-2">
+    <div class="card p-3 text-center position-relative">
+      <a href="{{ route('requisitions.index', ['status_id' => $statusIds['Contract Signed'] ?? '']) }}" class="stretched-link"></a>
+      <div class="text-muted small text-center">Contract Signed</div>
+      <div class="h4 m-0 text-center">{{ $contractSignedCount }}</div>
+    </div>
+  </div>
+
+  {{-- Delivered --}}
+  <div class="col-md-2">
+    <div class="card p-3 text-center position-relative">
+      <a href="{{ route('requisitions.index', ['status_id' => $statusIds['Delivered'] ?? '']) }}" class="stretched-link"></a>
+      <div class="text-muted small text-center">Delivered</div>
+      <div class="h4 m-0 text-center">{{ $deliveredCount }}</div>
+    </div>
+  </div>
 </div>
+
 
 {{-- ===== Department & Procurement Type Wise Requisitions ===== --}}
 <div class="row justify-content-center">

@@ -1,4 +1,4 @@
-<aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3" id="sidenav-main">
+<aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 overflow-y: auto;" id="sidenav-main">
   <div class="sidenav-header">
     <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
     <a class="align-items-center d-flex m-0 navbar-brand text-wrap" href="{{ route('dashboard') }}">
@@ -182,14 +182,29 @@
     </li>
   @endif
 @endauth
-
-    
-
-
-      
-
-
     </ul>
   </div>
 </aside>
 
+<style>
+  .g-sidenav-show .sidenav {
+  position: fixed !important;
+  top: 0; left: 0;
+  height: 100vh !important;
+  max-height: none !important;
+  overflow-y: hidden !important;
+  overflow-x: hidden !important;
+}
+
+
+.g-sidenav-show .sidenav .navbar-collapse {
+  overflow: visible !important;
+}
+
+
+.g-sidenav-show .main-content {
+  margin-left: 250px;              
+  min-height: 100vh;
+  overflow: auto;                  
+}
+</style>

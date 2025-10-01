@@ -24,7 +24,7 @@
               <th>Package No</th>
               <th>Description</th>
               <th>Procurement Method</th>
-              <th>Estimated Cost (BDT)</th>
+              <th class='text-end'  >Estimated Cost (BDT)</th>
             </tr>
           </thead>
           <tbody>
@@ -34,7 +34,7 @@
                 <td>{{ $p->package_no }}</td>
                 <td>{{ $p->description }}</td>
                 <td>{{ $p->procurement_method_name ?? '-' }}</td>
-                <td>{{ number_format($p->estimated_cost_bdt, 2) }}</td>
+                <td class='text-end'>{{ number_format($p->estimated_cost_bdt, 2) }}</td>
               </tr>
             @empty
               <tr>

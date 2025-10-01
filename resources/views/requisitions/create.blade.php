@@ -180,7 +180,10 @@
               <div class="col-md-6">
                 <label class="form-control-label">Tech Spec (Excel)</label>
                 <input type="file" name="tech_spec" class="form-control" accept=".xlsx,.xls,.csv">
-                <small class="text-muted">Headers: <code>spec_name, qty, unit_price, total_price</code></small>
+                <a href="{{ route('techspecs.sample') }}"
+                  class="link-danger text-sm fw-semibold d-inline-flex align-items-center">
+                  <i class="fas fa-download me-1"></i> Sample Excel
+                </a>
               </div>
             </div>
 

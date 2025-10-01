@@ -146,11 +146,24 @@ class DashboardController extends Controller
             ->orderBy('procurement_types.name')
             ->get();
 
+        //Requistion status wise
+
+         $statusIds = RequisitionStatus::whereIn('name', [
+        'Initiate',
+        'Tender Opened',
+        'Evaluation Completed',
+        'Contract Signed',
+        'Delivered',
+             ])->pluck('id', 'name')->toArray();
+
         // ---------------------------------------------
         // Return to view
         // $start / $end are strings for the form and label
         // ---------------------------------------------
-        return view('dashboard', compact(
+        return view('dashboard', compact(   
+            
+             'statusIds',
+
             // filters (strings for inputs/labels)
             'start', 'end',
 
@@ -161,7 +174,8 @@ class DashboardController extends Controller
             'initiateCount', 'evaluationCount', 'contractSignedCount', 'deliveredCount', 'tenderOpenedCount',
 
             // tables
-            'statusCounts', 'departmentCounts', 'typeCounts'
+            'statusCounts', 'departmentCounts', 'typeCounts',
+            
         ));
     }
 }

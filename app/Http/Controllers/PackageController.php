@@ -9,6 +9,7 @@ use App\Imports\PackagesImport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\PackagesExport;
 use Maatwebsite\Excel\Excel as ExcelFormat;
+use App\Exports\PackagesSampleExport;
 
 
 class PackageController extends Controller
@@ -139,6 +140,11 @@ class PackageController extends Controller
      public function downloadExcel()
     {
         return Excel::download(new PackagesExport, 'packages.xlsx', ExcelFormat::XLSX);
+    }
+
+        public function sampleTemplate()
+    {
+        return Excel::download(new PackagesSampleExport, 'packages_sample.xlsx');
     }
 
 }

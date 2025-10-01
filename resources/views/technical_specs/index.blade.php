@@ -41,7 +41,7 @@
               <th class="text-end">Quantity</th>
               <th class="text-end">Unit Price (BDT)</th>
               <th class="text-end">Total Price (BDT)</th>
-              <th class="text-end">Action</th>
+              <th class="text-center">Action</th>
             </tr>
           </thead>
           <tbody>

@@ -37,11 +37,11 @@
         <div class="row mb-3">
           <div class="col-md-4">
             <label class="form-label">Qty / Nos.</label>
-            <input type="number" step="0.001" name="quantity" class="form-control" value="{{ old('quantity',$spec->quantity) }}">
+            <input type="number"  name="quantity" class="form-control" value="{{ number_format((int) ($spec->quantity ?? 0), 0) }}">
           </div>
           <div class="col-md-4">
             <label class="form-label">Unit Price (BDT)</label>
-            <input type="number" step="0.01" name="unit_price_bdt" class="form-control" value="{{ old('unit_price_bdt',$spec->unit_price_bdt) }}">
+            <input type="number" step="0.01" name="unit_price_bdt" class="form-control" value="{{ old('unit_price_bdt',$spec->unit_price_bdt) }}"  inputmode="numeric">
           </div>
           <div class="col-md-4">
             <label class="form-label">Total Price (BDT)</label>

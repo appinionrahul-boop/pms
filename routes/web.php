@@ -60,6 +60,9 @@ Route::group(['middleware' => 'auth'], function () {
 	// Optional nested create (from a package)
 	Route::get('packages/{package}/requisitions/create', [RequisitionController::class,'create'])
 		->name('packages.requisitions.create');
+    
+     Route::get('/packages/sample-excel', [PackageController::class, 'sampleTemplate'])
+    ->name('packages.sample');
 
 	//Technical Spec
 	Route::get('technical-specs', [TechnicalSpecController::class, 'index'])->name('techspecs.index');
@@ -76,6 +79,10 @@ Route::group(['middleware' => 'auth'], function () {
 	// quick “Add new for a package”
 	Route::get('technical-specs/package/{package}/create', [TechnicalSpecController::class, 'createForPackage'])
 		->name('techspecs.createForPackage');
+        
+    // Download sample technical spec
+    Route::get('/technical-specs/sample-excel', [TechnicalSpecController::class, 'sampleTemplate'])
+    ->name('techspecs.sample');
 
 	//Report
 	Route::get('/reports/procurements', [ReportController::class, 'index'])

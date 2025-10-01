@@ -107,8 +107,8 @@
       order: [[0, 'asc']],
       pageLength: 10,
       language: {
-        search: 'Search:',
-        searchPlaceholder: 'Type to filter...'
+         searching: false, 
+       
       }
     });
   });

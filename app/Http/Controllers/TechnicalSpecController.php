@@ -9,6 +9,8 @@ use App\Models\Notificaton;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Exports\TechnicalSpecsSampleExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TechnicalSpecController extends Controller
 {
@@ -33,11 +35,18 @@ public function index(Request $request)
         'ts.total_price_bdt',
     ])
     ->when($q !== '', function ($x) use ($q) {
-        $x->where(function ($y) use ($q) {
-            $y->where('p.package_id', 'like', "%{$q}%")
-              ->orWhere('p.package_no', 'like', "%{$q}%")
-              ->orWhere('ts.spec_name', 'like', "%{$q}%")
-              ->orWhere('ts.erp_code', 'like', "%{$q}%");
+        $needle = mb_strtolower(trim($q));
+
+        // Escape regex metacharacters for MySQL REGEXP
+        $needle = preg_replace('/[\\\\.^$|()\\[\\]{}*+?]/', '\\\\$0', $needle);
+
+        $x->where(function ($y) use ($needle) {
+            // exact equals for IDs / codes
+            $y->where('p.package_id', $needle)
+            ->orWhere('p.package_no', $needle)
+            ->orWhere('ts.erp_code', $needle)
+            // exact WORD match inside spec_name (e.g., "pen" matches "blue pen", not "pencil")
+            ->orWhereRaw('LOWER(ts.spec_name) REGEXP ?', ["[[:<:]]{$needle}[[:>:]]"]);
         });
     })
     ->orderByDesc('p.id')
@@ -158,5 +167,10 @@ public function index(Request $request)
         return redirect()
             ->route('techspecs.index')
             ->with('success', 'Technical specification deleted.');
+    }
+
+    public function sampleTemplate()
+    {
+        return Excel::download(new TechnicalSpecsSampleExport, 'technical_specs_sample.xlsx');
     }
 }
