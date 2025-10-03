@@ -22,14 +22,21 @@ class Kernel extends ConsoleKernel
      * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
-    protected function schedule(Schedule $schedule)
+    // protected function schedule(Schedule $schedule)
+    // {
+    //     $hour = config('app.hour');
+    //     $min = config('app.min');
+    //     $scheduledInterval = $hour !== '' ? ( ($min !== '' && $min != 0) ?  $min .' */'. $hour .' * * *' : '0 */'. $hour .' * * *') : '*/'. $min .' * * * *';
+    //     if(env('IS_DEMO')) {
+    //         $schedule->command('migrate:fresh --seed')->cron($scheduledInterval);
+    //     }
+    // }
+
+    protected function schedule(Schedule $schedule): void
     {
-        $hour = config('app.hour');
-        $min = config('app.min');
-        $scheduledInterval = $hour !== '' ? ( ($min !== '' && $min != 0) ?  $min .' */'. $hour .' * * *' : '0 */'. $hour .' * * *') : '*/'. $min .' * * * *';
-        if(env('IS_DEMO')) {
-            $schedule->command('migrate:fresh --seed')->cron($scheduledInterval);
-        }
+        // Send once every morning (server time). Adjust time if you want.
+        $schedule->command('alerts:delivery')->dailyAt('09:00');
+        // Or: $schedule->command('alerts:delivery')->twiceDaily(9, 15);
     }
 
     /**

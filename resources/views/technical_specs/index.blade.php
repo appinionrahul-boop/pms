@@ -55,8 +55,8 @@
                 <td class="align-middle">{{ $s->erp_code }}</td>
                 <td class="align-middle">{{ $s->spec_name }}</td>
                 <td class="text-end align-middle">{{ (int) $s->quantity }}</td>
-                <td class="text-end align-middle">{{ (int) $s->unit_price_bdt }}</td>
-                <td class="text-end align-middle">{{ (int) $s->total_price_bdt }}</td>
+                <td class="text-end align-middle">{{  $s->unit_price_bdt }}</td>
+                <td class="text-end align-middle">{{  $s->total_price_bdt }}</td>
                 <td class="text-end align-middle">
                   <!-- <a href="{{ route('techspecs.show', $s->package_id) }}" class="btn btn-link text-secondary px-2 mb-0">
                     <i class="fas fa-eye me-1"></i> View

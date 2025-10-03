@@ -1,3 +1,5 @@
+@php use Illuminate\Support\Facades\Storage; @endphp
+
 @extends('layouts.user_type.auth')
 
 @section('content')
@@ -55,9 +57,10 @@
 
       <div class="row mb-2">
         <div class="col-md-6"><strong>Reference Annex:</strong>
-          @if($requisition->reference_annex)
+        <a href="{{ route('requisitions.annex', $requisition) }}" target="_blank" rel="noopener">Download</a> 
+          <!-- @if($requisition->reference_annex)
             <a href="{{ asset('storage/'.$requisition->reference_annex) }}" target="_blank">Download</a>
-          @else — @endif
+          @else — @endif -->
         </div>
         <div class="col-md-6"><strong>Tech Spec File:</strong>
           @if($requisition->tech_spec_file)

@@ -45,8 +45,9 @@
           </div>
           <div class="col-md-4">
             <label class="form-label">Total Price (BDT)</label>
-            <input type="number" step="0.01" name="total_price_bdt" class="form-control" value="{{ old('total_price_bdt',$spec->total_price_bdt) }}">
-            <small class="text-muted">If empty, we’ll auto-calc Qty × Unit Price.</small>
+            <input type="number" step="0.01" name="total_price_bdt" class="form-control"
+                  value="{{ old('total_price_bdt',$spec->total_price_bdt) }}" readonly>
+            <small class="text-muted">Auto-calculated: Qty × Unit Price</small>
           </div>
           <div class="mb-3">
             <label class="form-label">ERP Code</label>
@@ -62,4 +63,22 @@
     </div>
   </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const qty   = document.querySelector('input[name="quantity"]');
+  const unit  = document.querySelector('input[name="unit_price_bdt"]');
+  const total = document.querySelector('input[name="total_price_bdt"]');
+
+  function toNumber(v){ return parseFloat(String(v).replace(/,/g,'')) || 0; }
+  function calc(){ total.value = (toNumber(qty.value) * toNumber(unit.value)).toFixed(2); }
+
+  ['input','change'].forEach(ev => {
+    qty.addEventListener(ev,  calc);
+    unit.addEventListener(ev, calc);
+  });
+
+  calc(); // init on load
+});
+</script>
+
 @endsection

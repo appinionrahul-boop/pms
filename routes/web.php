@@ -16,6 +16,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\NotificationController;
+use Illuminate\Support\Facades\Artisan;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -28,6 +29,11 @@ use App\Http\Controllers\NotificationController;
 */
 
 Route::group(['middleware' => 'auth'], function () {
+
+    Route::get('/run/alerts-delivery-once', function () {
+    Artisan::call('alerts:delivery');
+    return nl2br(e(Artisan::output() ?: 'Done'));
+});
 
     Route::get('/', [HomeController::class, 'home']);
 
@@ -127,6 +133,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/notifications/mark-all-seen', [NotificationController::class, 'markAllSeen'])
     ->name('notifications.markAllSeen'); // marks all unseen -> seen
 	
+    //Annex Download
+    Route::get('/requisitions/{requisition}/annex', [\App\Http\Controllers\RequisitionController::class, 'annex'])
+    ->name('requisitions.annex');
 });
 
 

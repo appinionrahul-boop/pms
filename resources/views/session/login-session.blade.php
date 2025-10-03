@@ -28,7 +28,7 @@
                     </div>
                     <label>Password</label>
                     <div class="mb-3 position-relative">
-                      <input type="password" class="form-control" name="password" id="password" placeholder="Password" value="secret" aria-label="Password" aria-describedby="password-addon">
+                      <input type="password" class="form-control" name="password" id="password" placeholder="Password"  aria-label="Password" aria-describedby="password-addon">
                       <span class="position-absolute top-50 end-0 translate-middle-y me-3" style="cursor:pointer;" onclick="togglePassword()">
                         👁
                       </span>

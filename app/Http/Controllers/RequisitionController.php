@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\TechnicalSpecsImport;
 use Yajra\DataTables\Facades\DataTables;
+use Symfony\Component\HttpFoundation\Response;
 
 class RequisitionController extends Controller
 {
@@ -308,7 +309,7 @@ class RequisitionController extends Controller
     if (!empty($filters['date_from']))             $q->whereDate('created_at','>=',$filters['date_from']);
     if (!empty($filters['date_to']))               $q->whereDate('created_at','<=',$filters['date_to']);
 
-    $requisitions = $q->orderByDesc('created_at')
+    $requisitions = $q->orderByDesc('created_at', 'DESC')
         ->paginate($perPage)
         ->withQueryString();
 
@@ -346,6 +347,22 @@ class RequisitionController extends Controller
             ->route('requisitions.index')
             ->with('error', 'Failed to delete requisition: ' . $e->getMessage());
     }
+}
+
+public function annex(\App\Models\Requisition $requisition)
+{
+    if (!$requisition->reference_annex) {
+        abort(404, 'No annex file for this requisition.');
+    }
+
+    $path = Storage::disk('public')->path($requisition->reference_annex);
+
+    if (!is_file($path)) {
+        abort(404, 'File missing on disk: '.$requisition->reference_annex);
+    }
+
+    // View in browser; use ->download($path) if you want a download prompt
+    return response()->file($path); // or: return response()->download($path);
 }
 
 
