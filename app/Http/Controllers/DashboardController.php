@@ -63,9 +63,7 @@ class DashboardController extends Controller
 
         $requisitionsTotal = $withPeriod(Requisition::query())->count();
 
-        $packagesWithoutReqTotal = $withPeriod(Package::query())
-            ->doesntHave('requisitions')
-            ->count();
+       $packagesWithoutReqTotal = Package::whereDoesntHave('requisitions')->count();
 
         // ---------------------------------------------
         // Named status cards

@@ -4,6 +4,13 @@
 @php
   $selStart = $start ?? null;
   $selEnd   = $end ?? null;
+
+  // pass date range to any link that should respect the dashboard filter
+  $range = [
+    'date_from' => $selStart,
+    'date_to'   => $selEnd,
+  ];
+  $pkgRange = ['start' => $selStart, 'end' => $selEnd];
 @endphp
 
 {{-- ===== Filters: Start Date & End Date ===== --}}
@@ -49,14 +56,11 @@
     –
     <strong>{{ \Carbon\Carbon::parse($selEnd)->format('d M Y') }}</strong>
   @elseif (!empty($selStart))
-    from <strong>{{ \Carbon\Carbon::parse($selStart)->format('d M Y') }}</strong>
-    onwards
+    from <strong>{{ \Carbon\Carbon::parse($selStart)->format('d M Y') }}</strong> onwards
   @elseif (!empty($selEnd))
     until <strong>{{ \Carbon\Carbon::parse($selEnd)->format('d M Y') }}</strong>
   @endif
 </p>
-
-{{-- (keep the rest of your KPI cards, tables, etc. unchanged) --}}
 
 {{-- Equalize control heights --}}
 <style>
@@ -70,11 +74,10 @@
   }
 </style>
 
-{{-- Current filter label --}}
+{{-- Month/Year label (kept) --}}
 <p class="text-muted mb-4">
-  
   @if (empty($selYear))
-    <!-- <strong>All time</strong> -->
+    <!-- All time -->
   @elseif (empty($selMonth))
     <strong>All {{ $selYear }}</strong>
   @else
@@ -86,20 +89,23 @@
 <div class="row g-3 mb-4">
   <div class="col-md-4">
     <div class="card p-3">
-       <a href="{{ route('packages.all') }}" class="stretched-link"></a>
+      {{-- (packages.all doesn’t take dates; leaving as-is) --}}
+      <a href="{{ route('packages.all', $pkgRange) }}" class="stretched-link"></a>
       <div class="text-muted text-center">Total Packages</div>
       <div class="h4 m-0 text-center">{{ $packagesTotal }}</div>
     </div>
   </div>
   <div class="col-md-4">
     <div class="card p-3">
-       <a href="{{ route('requisitions.index') }}" class="stretched-link"></a>
+      {{-- total requisitions respecting date range --}}
+      <a href="{{ route('requisitions.index', $range) }}" class="stretched-link"></a>
       <div class="text-muted text-center">Total Requisitions</div>
       <div class="h4 m-0 text-center">{{ $requisitionsTotal }}</div>
     </div>
   </div>
   <div class="col-md-4">
     <div class="card p-3">
+      {{-- packages.index doesn’t support date filtering; keep link as-is --}}
       <a href="{{ route('packages.index') }}" class="stretched-link"></a>
       <div class="text-muted text-center">Packages w/o Requisition</div>
       <div class="h4 m-0 text-center">{{ $packagesWithoutReqTotal }}</div>
@@ -107,45 +113,14 @@
   </div>
 </div>
 
-{{-- ===== 5 Status Cards ===== --}}
-<!-- <div class="row g-3 mb-4">
-  <div class="col-md-2">
-    <div class="card p-3 text-center">
-      <div class="text-muted small text-center">Initiate</div>
-      <div class="h4 m-0 text-center">{{ $initiateCount }}</div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="card p-3 text-center">
-      <div class="text-muted small text-center">Tender Opened</div>
-      <div class="h4 m-0 text-center">{{ $tenderOpenedCount }}</div>
-    </div>
-  </div>
-  <div class="col-md-3">
-    <div class="card p-3 text-center">
-      <div class="text-muted small text-center">Evaluation Completed</div>
-      <div class="h4 m-0 text-center">{{ $evaluationCount }}</div>
-    </div>
-  </div>
-  <div class="col-md-2">
-    <div class="card p-3 text-center">
-      <div class="text-muted small text-center">Contract Signed</div>
-      <div class="h4 m-0 text-center">{{ $contractSignedCount }}</div>
-    </div>
-  </div>
-  <div class="col-md-2">
-    <div class="card p-3 text-center">
-      <div class="text-muted small text-center">Delivered</div>
-      <div class="h4 m-0 text-center">{{ $deliveredCount }}</div>
-    </div>
-  </div>
-</div> -->
-{{-- ===== 5 Status Cards ===== --}}
+{{-- ===== 5 Status Cards (clicks preserve date range) ===== --}}
 <div class="row g-3 mb-4">
   {{-- Initiate --}}
   <div class="col-md-2">
     <div class="card p-3 text-center position-relative">
-      <a href="{{ route('requisitions.index', ['status_id' => $statusIds['Initiate'] ?? '']) }}" class="stretched-link"></a>
+      <a href="{{ route('requisitions.index',
+            array_merge($range, ['status_id' => $statusIds['Initiate'] ?? null])) }}"
+         class="stretched-link"></a>
       <div class="text-muted small text-center">Initiate</div>
       <div class="h4 m-0 text-center">{{ $initiateCount }}</div>
     </div>
@@ -154,7 +129,9 @@
   {{-- Tender Opened --}}
   <div class="col-md-3">
     <div class="card p-3 text-center position-relative">
-      <a href="{{ route('requisitions.index', ['status_id' => $statusIds['Tender Opened'] ?? '']) }}" class="stretched-link"></a>
+      <a href="{{ route('requisitions.index',
+            array_merge($range, ['status_id' => $statusIds['Tender Opened'] ?? null])) }}"
+         class="stretched-link"></a>
       <div class="text-muted small text-center">Tender Opened</div>
       <div class="h4 m-0 text-center">{{ $tenderOpenedCount }}</div>
     </div>
@@ -163,7 +140,9 @@
   {{-- Evaluation Completed --}}
   <div class="col-md-3">
     <div class="card p-3 text-center position-relative">
-      <a href="{{ route('requisitions.index', ['status_id' => $statusIds['Evaluation Completed'] ?? '']) }}" class="stretched-link"></a>
+      <a href="{{ route('requisitions.index',
+            array_merge($range, ['status_id' => $statusIds['Evaluation Completed'] ?? null])) }}"
+         class="stretched-link"></a>
       <div class="text-muted small text-center">Evaluation Completed</div>
       <div class="h4 m-0 text-center">{{ $evaluationCount }}</div>
     </div>
@@ -172,7 +151,9 @@
   {{-- Contract Signed --}}
   <div class="col-md-2">
     <div class="card p-3 text-center position-relative">
-      <a href="{{ route('requisitions.index', ['status_id' => $statusIds['Contract Signed'] ?? '']) }}" class="stretched-link"></a>
+      <a href="{{ route('requisitions.index',
+            array_merge($range, ['status_id' => $statusIds['Contract Signed'] ?? null])) }}"
+         class="stretched-link"></a>
       <div class="text-muted small text-center">Contract Signed</div>
       <div class="h4 m-0 text-center">{{ $contractSignedCount }}</div>
     </div>
@@ -181,13 +162,14 @@
   {{-- Delivered --}}
   <div class="col-md-2">
     <div class="card p-3 text-center position-relative">
-      <a href="{{ route('requisitions.index', ['status_id' => $statusIds['Delivered'] ?? '']) }}" class="stretched-link"></a>
+      <a href="{{ route('requisitions.index',
+            array_merge($range, ['status_id' => $statusIds['Delivered'] ?? null])) }}"
+         class="stretched-link"></a>
       <div class="text-muted small text-center">Delivered</div>
       <div class="h4 m-0 text-center">{{ $deliveredCount }}</div>
     </div>
   </div>
 </div>
-
 
 {{-- ===== Department & Procurement Type Wise Requisitions ===== --}}
 <div class="row justify-content-center">
@@ -250,7 +232,7 @@
   </div>
 </div>
 
-{{-- Equalize control heights --}}
+{{-- Equalize control heights (selects only) --}}
 <style>
   .control-eq{
     min-height: 52px;   /* larger, consistent height for selects & buttons */
@@ -261,5 +243,4 @@
     padding-bottom: .65rem;
   }
 </style>
-
 @endsection

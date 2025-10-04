@@ -120,26 +120,43 @@ class PackageController extends Controller
         return back()->with('success', 'Package deleted.');
     }
 
-    public function all()
+    public function all(Request $request)
     {
-        $packages = Package::query()
+        $start = $request->input('start');
+        $end   = $request->input('end');
+
+        $q = \DB::table('packages as p')
+            ->leftJoin('procurement_methods as m', 'm.id', '=', 'p.procurement_method_id')
             ->select([
-                 'packages.package_id',
-                'packages.package_no',
-                'packages.description',
-                'procurement_methods.name as procurement_method_name',
-                'packages.estimated_cost_bdt'
-            ])
-            ->leftJoin('procurement_methods', 'packages.procurement_method_id', '=', 'procurement_methods.id')
-            ->orderBy('packages.id', 'ASC')
-            ->get();
+                'p.package_id',
+                'p.package_no',
+                'p.description',
+                'p.estimated_cost_bdt',
+                'p.created_at',
+                'm.name as procurement_method_name',
+            ]);
+
+        if ($start) {
+            $q->whereDate('p.created_at', '>=', $start);
+        }
+        if ($end) {
+            $q->whereDate('p.created_at', '<=', $end);
+        }
+
+        $packages = $q->orderByDesc('p.created_at')->get();
 
         return view('packages.all', compact('packages'));
     }
     
-     public function downloadExcel()
+     public function downloadExcel(Request $request)
     {
-        return Excel::download(new PackagesExport, 'packages.xlsx', ExcelFormat::XLSX);
+        $start = $request->input('start');
+        $end   = $request->input('end');
+
+        return Excel::download(
+            new PackagesExport($start, $end),
+            'packages_'.now()->format('Ymd_His').'.xlsx'
+        );
     }
 
         public function sampleTemplate()

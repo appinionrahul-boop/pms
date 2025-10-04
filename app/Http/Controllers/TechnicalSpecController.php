@@ -21,40 +21,51 @@ public function index(Request $request)
 {
     $q = trim((string) $request->get('q', ''));
 
+    // per-page (defaults to 25). Clamp to safe values.
+    $perPage = (int) $request->input('per_page', 25);
+    $allowed = [10, 25, 50, 100, 200];
+    if (!in_array($perPage, $allowed, true)) {
+        $perPage = 25;
+    }
+
     $specs = DB::table('technical_specs as ts')
-    ->join('packages as p', 'ts.package_id', '=', 'p.id')
-    ->select([
-        'ts.id as spec_id',          // <-- REQUIRED for edit/delete routes
-        'p.package_id',
-        'p.package_no',
-        'p.description',
-        'ts.erp_code',
-        'ts.spec_name',
-        'ts.quantity',
-        'ts.unit_price_bdt',
-        'ts.total_price_bdt',
-    ])
-    ->when($q !== '', function ($x) use ($q) {
-        $needle = mb_strtolower(trim($q));
+        ->join('packages as p', 'ts.package_id', '=', 'p.id')
+        ->select([
+            'ts.id as spec_id',
+            'p.package_id',
+            'p.package_no',
+            'p.description',
+            'ts.erp_code',
+            'ts.spec_name',
+            'ts.quantity',
+            'ts.unit_price_bdt',
+            'ts.total_price_bdt',
+        ])
+        ->when($q !== '', function ($x) use ($q) {
+            $needle = mb_strtolower(trim($q));
+            // Escape regex metacharacters for MySQL REGEXP
+            $needle = preg_replace('/[\\\\.^$|()\\[\\]{}*+?]/', '\\\\$0', $needle);
 
-        // Escape regex metacharacters for MySQL REGEXP
-        $needle = preg_replace('/[\\\\.^$|()\\[\\]{}*+?]/', '\\\\$0', $needle);
+            $x->where(function ($y) use ($needle) {
+                $y->where('p.package_id', $needle)
+                  ->orWhere('p.package_no', $needle)
+                  ->orWhere('ts.erp_code', $needle)
+                  // exact WORD match inside spec_name (e.g., "pen" matches "blue pen", not "pencil")
+                  ->orWhereRaw('LOWER(ts.spec_name) REGEXP ?', ["[[:<:]]{$needle}[[:>:]]"]);
+            });
+        })
+        ->orderByDesc('p.id')
+        ->paginate($perPage)
+        ->withQueryString(); // keep q & per_page in links
 
-        $x->where(function ($y) use ($needle) {
-            // exact equals for IDs / codes
-            $y->where('p.package_id', $needle)
-            ->orWhere('p.package_no', $needle)
-            ->orWhere('ts.erp_code', $needle)
-            // exact WORD match inside spec_name (e.g., "pen" matches "blue pen", not "pencil")
-            ->orWhereRaw('LOWER(ts.spec_name) REGEXP ?', ["[[:<:]]{$needle}[[:>:]]"]);
-        });
-    })
-    ->orderByDesc('p.id')
-    ->get();
-
-    return view('technical_specs.index', ['specs' => $specs, 'q' => $q]);
-
+    return view('technical_specs.index', [
+        'specs'    => $specs,
+        'q'        => $q,
+        'perPage'  => $perPage,
+        'allowed'  => $allowed,
+    ]);
 }
+
 
 
 

@@ -28,6 +28,11 @@
           <a href="{{ route('techspecs.index') }}" class="btn btn-outline-dark w-100">Reset</a>
         </div>
       </form>
+      <!-- @if($q !== '' && $specs->isEmpty())
+          <div class="alert alert-warning mb-3">
+            No results found for <strong>{{ e($q) }}</strong>.
+          </div>
+        @endif -->
 
       <div class="table-responsive">
         <table class="table align-items-center mb-0" id="packagesTable" style="width:100%">
@@ -44,44 +49,28 @@
               <th class="text-center">Action</th>
             </tr>
           </thead>
-          <tbody>
-            @forelse($specs as $s)
+         <tbody>
+            @forelse ($specs as $s)
               <tr>
-                <td class="align-middle">{{ $s->package_id }}</td>
-                <td class="align-middle">{{ $s->package_no }}</td>
-                <td class="align-middle desc-cell">
-                  <span class="desc-text">{{ $s->description }}</span>
-                </td>
-                <td class="align-middle">{{ $s->erp_code }}</td>
-                <td class="align-middle">{{ $s->spec_name }}</td>
-                <td class="text-end align-middle">{{ (int) $s->quantity }}</td>
-                <td class="text-end align-middle">{{  $s->unit_price_bdt }}</td>
-                <td class="text-end align-middle">{{  $s->total_price_bdt }}</td>
-                <td class="text-end align-middle">
-                  <!-- <a href="{{ route('techspecs.show', $s->package_id) }}" class="btn btn-link text-secondary px-2 mb-0">
-                    <i class="fas fa-eye me-1"></i> View
-                  </a> -->
-                  <!-- <a href="{{ route('techspecs.edit', $s->package_id) }}" class="btn btn-link text-primary px-2 mb-0">
+                <td class="text-center">{{ $s->package_id }}</td>
+                <td class="text-center">{{ $s->package_no }}</td>
+                <td class="align-middle desc-cell"><span class="desc-text">{{ $s->description }}</span></td>
+                <td class="text-center">{{ $s->erp_code }}</td>
+                <td class="text-center">{{ $s->spec_name }}</td>
+                <td class="text-center">{{ (int) $s->quantity }}</td>
+                <td class="text-center">{{ $s->unit_price_bdt }}</td>
+                <td class="text-center">{{ $s->total_price_bdt }}</td>
+                <td class="text-center">
+                  <a href="{{ route('techspecs.edit', $s->spec_id) }}" class="btn btn-link text-primary px-2 mb-0">
                     <i class="fas fa-edit me-1"></i> Edit
                   </a>
-                  <form action="{{ route('techspecs.destroy', $s->package_id) }}" method="POST" class="d-inline"
+                  <form action="{{ route('techspecs.destroy', $s->spec_id) }}" method="POST" class="d-inline"
                         onsubmit="return confirm('Delete this specification?');">
                     @csrf @method('DELETE')
                     <button type="submit" class="btn btn-link text-danger px-2 mb-0">
                       <i class="fas fa-trash me-1"></i> Delete
-                    </button> -->
-                    <a href="{{ route('techspecs.edit', $s->spec_id) }}" class="btn btn-link text-primary px-2 mb-0">
-                      <i class="fas fa-edit me-1"></i> Edit
-                    </a>
-
-                    <form action="{{ route('techspecs.destroy', $s->spec_id) }}" method="POST" class="d-inline"
-                          onsubmit="return confirm('Delete this specification?');">
-                      @csrf @method('DELETE')
-                      <button type="submit" class="btn btn-link text-danger px-2 mb-0">
-                        <i class="fas fa-trash me-1"></i> Delete
-                      </button>
+                    </button>
                   </form>
-
                 </td>
               </tr>
             @empty
@@ -90,6 +79,7 @@
               </tr>
             @endforelse
           </tbody>
+
         </table>
       </div>
 
@@ -122,22 +112,25 @@
 
 <script>
   $(function () {
-    $('#packagesTable').DataTable({
-      order: [[1, 'asc']],                // by Package No
-      pageLength: 10,
-      lengthMenu: [10, 25, 50, 100],
-      searching: false,                   // you’re using the top filter form
-      columnDefs: [
-        { targets: [5,6,7,8], className: 'text-end align-middle' }, // qty, unit, total, action
-        { targets: [0,1,2,3,4], className: 'align-middle' },
-        { targets: 8, orderable: false }  // action column not sortable
-      ],
-      language: {
-        emptyTable: 'No specifications found.',
-        zeroRecords: 'No matching specifications.'
-      }
-    });
+  $('#packagesTable').DataTable({
+    order: [[1, 'asc']],
+    pageLength: 10,
+    lengthMenu: [10, 25, 50, 100],
+    searching: false,                 // you use the top form
+    columnDefs: [
+      { targets: [5,6,7,8], className: 'text-end align-middle' },
+      { targets: [0,1,2,3,4], className: 'align-middle' },
+      { targets: 8, orderable: false }
+    ],
+    language: {
+      emptyTable: 'No specifications found.',
+      zeroRecords: 'No results for "{{ addslashes($q) }}".',
+      infoEmpty: 'Showing 0 to 0 of 0 items',
+      info: 'Showing _START_ to _END_ of _TOTAL_ items'
+    }
   });
+});
+
 </script>
 
 @endsection
