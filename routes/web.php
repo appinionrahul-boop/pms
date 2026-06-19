@@ -16,6 +16,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\NotificationController;
+use Illuminate\Support\Facades\Artisan;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -28,6 +29,19 @@ use App\Http\Controllers\NotificationController;
 */
 
 Route::group(['middleware' => 'auth'], function () {
+    
+    
+    //Delivery Date requisition notificatin
+    
+     Route::get('/run/alerts-delivery-once', function () {
+    Artisan::call('alerts:delivery');
+    return nl2br(e(Artisan::output() ?: 'Done'));
+    });
+    
+    
+    //requisition Annex Download
+    Route::get('/requisitions/{requisition}/annex', [\App\Http\Controllers\RequisitionController::class, 'annex'])
+    ->name('requisitions.annex');
 
     Route::get('/', [HomeController::class, 'home']);
 
@@ -55,11 +69,19 @@ Route::group(['middleware' => 'auth'], function () {
 	//Requisition
 	// Route::resource('requisitions', RequisitionController::class)->except(['show','index']);
 
+	// Requisition Summary (must be before the resource route so it isn't
+	// captured by requisitions/{requisition})
+	Route::get('requisitions/summary', [RequisitionController::class, 'summary'])
+		->name('requisitions.summary');
+
 	Route::resource('requisitions', RequisitionController::class);
 
 	// Optional nested create (from a package)
 	Route::get('packages/{package}/requisitions/create', [RequisitionController::class,'create'])
 		->name('packages.requisitions.create');
+    
+     Route::get('/packages/sample-excel', [PackageController::class, 'sampleTemplate'])
+    ->name('packages.sample');
 
 	//Technical Spec
 	Route::get('technical-specs', [TechnicalSpecController::class, 'index'])->name('techspecs.index');
@@ -76,6 +98,10 @@ Route::group(['middleware' => 'auth'], function () {
 	// quick “Add new for a package”
 	Route::get('technical-specs/package/{package}/create', [TechnicalSpecController::class, 'createForPackage'])
 		->name('techspecs.createForPackage');
+        
+    // Download sample technical spec
+    Route::get('/technical-specs/sample-excel', [TechnicalSpecController::class, 'sampleTemplate'])
+    ->name('techspecs.sample');
 
 	//Report
 	Route::get('/reports/procurements', [ReportController::class, 'index'])

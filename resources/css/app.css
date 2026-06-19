@@ -1,0 +1,20 @@
+.g-sidenav-show .sidenav {
+  position: fixed !important;
+  top: 0; left: 0;
+  height: 100vh !important;
+  max-height: none !important;
+  overflow-y: hidden !important;
+  overflow-x: hidden !important;
+}
+
+/* 2) Soft UI puts overflow on the inner collapse too — kill that */
+.g-sidenav-show .sidenav .navbar-collapse {
+  overflow: visible !important;
+}
+
+/* 3) Ensure the main content scrolls instead of the sidenav */
+.g-sidenav-show .main-content {
+  margin-left: 250px;              /* match your sidenav width (Soft UI default ~250px) */
+  min-height: 100vh;
+  overflow: auto;                   /* page scroll lives here */
+}

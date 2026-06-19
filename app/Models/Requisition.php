@@ -7,9 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Requisition extends Model
 {
     protected $fillable = [
-        'package_id','package_no','requisition_status_id','estimated_cost_bdt','unit_id','quantity',
+        'package_id','package_no','erp_requisition_no','requisition_status_id','estimated_cost_bdt','unit_id','quantity',
         'department_id','procurement_type_id','assigned_officer_id','tech_spec_file',
         'approving_authority_id','signing_date','lc_status_id','reference_annex',
+        'initiate_date','tender_opened_date','evaluation_completed_date',
         'description','procurement_method_id','vendor_name','official_estimated_cost_bdt',
         'requisition_receiving_date','delivery_date','reference_link','comments','officer_name',
     ];

@@ -42,16 +42,20 @@
             </select>
           </div>
         @endisset
-
-        <div class="mb-3">
-          <label class="form-label">Spec Name <span class="text-danger">*</span></label>
-          <input type="text" name="spec_name" class="form-control" value="{{ old('spec_name') }}" required>
-        </div>
-
-        {{-- ✅ ERP Code --}}
+                {{-- ✅ ERP Code --}}
         <div class="mb-3">
           <label class="form-label">ERP Code</label>
           <input type="text" name="erp_code" class="form-control" value="{{ old('erp_code') }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Item Name <span class="text-danger">*</span></label>
+          <input type="text" name="spec_name" class="form-control" value="{{ old('spec_name') }}" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Specification</label>
+          <textarea name="specification" class="form-control" rows="4"
+                    placeholder="Enter detailed specification">{{ old('specification') }}</textarea>
         </div>
 
         <div class="row mb-3">

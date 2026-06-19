@@ -9,21 +9,28 @@
         $unseenCount = \App\Models\Notificaton::where('is_seen', false)->count();
       @endphp
 
-      <li class="nav-item d-flex align-items-center" style="margin-right:30px;">
-        <a href="javascript:void(0)" id="btnNotifications" class="nav-link text-body font-weight-bold px-0">
-          <i class="fa fa-bell me-sm-1 position-relative">
-            @if($unseenCount > 0)
-              <span id="notificationBadge"
-                    class="badge bg-danger position-absolute top-0 start-100 translate-middle rounded-pill" style="margin-left: 84px;">
-                {{ $unseenCount }}
+        <li class="nav-item d-flex align-items-center me-3">
+            <a href="javascript:void(0)" id="btnNotifications"
+              class="nav-link p-0 d-flex align-items-center" role="button" aria-label="Notifications">
+              <span class="bell-wrap position-relative d-inline-flex align-items-center justify-content-center rounded-circle @if(($unseenCount ?? 0) > 0) has-unseen @endif">
+                {{-- Inline SVG bell --}}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 2a6 6 0 00-6 6v2.09c0 .51-.2 1-.56 1.36L4 13.29V15h16v-1.71l-1.44-1.84a2 2 0 01-.56-1.36V8a6 6 0 00-6-6zm0 20a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
+                </svg>
+
+                @php $badgeText = ($unseenCount ?? 0) > 99 ? '99+' : ($unseenCount ?? 0); @endphp
+                @if(($unseenCount ?? 0) > 0)
+                  <span id="notificationBadge" class="badge bg-danger text-white position-absolute badge-counter">
+                    {{ $badgeText }}
+                  </span>
+                @else
+                  <span id="notificationBadge" class="d-none"></span>
+                @endif
               </span>
-            @else
-              <span id="notificationBadge" class="d-none"></span>
-            @endif
-          </i>
-          <span class="d-sm-inline d-none">Notificaton</span>
-        </a>
-      </li>
+              <!-- <span class="d-sm-inline d-none ms-2">Notification</span> -->
+            </a>
+          </li>
+
         <li class="nav-item d-flex align-items-center">
           <a href="{{ route('logout') }}" class="nav-link text-body font-weight-bold px-0">
             <i class="fa fa-user me-sm-1"></i>
@@ -46,6 +53,16 @@
     </div>
   </div>
 </div>
+  <style>
+    .bell-wrap{ width:38px; height:38px; background:rgba(0,0,0,.06); }
+      .badge-counter{ top:-4px; right:-4px; min-width:18px; height:18px; line-height:18px; font-size:10px; padding:0 4px; border-radius:999px; }
+      .bell-wrap.has-unseen svg{ animation:bell-ring 1s ease-in-out 2; transform-origin: top center; }
+      @keyframes bell-ring{
+        0%{transform:rotate(0)}20%{transform:rotate(-15deg)}40%{transform:rotate(12deg)}
+        60%{transform:rotate(-8deg)}80%{transform:rotate(4deg)}100%{transform:rotate(0)}
+      }
+  </style>
+
 </nav>
 <script>
 document.addEventListener('DOMContentLoaded', function () {

@@ -106,7 +106,11 @@
             <tr>
               <td class="text-center">{{ $r->package_id }}</td>
               <td class="text-center">{{ $r->package_no }}</td>
-              <td class="text-center" style="max-width:420px">{{ $r->description }}</td>
+              <td class="text-center">
+                <div class="line-clamp-2 mx-auto" style="max-width: 460px;" title="{{ $r->description }}">
+                  {{ $r->description }}
+                </div>
+              </td>
               <td class="text-center">{{ $r->procurement_method ?? '—' }}</td>
               <td class="text-center">
                 <span class="badge bg-secondary">{{ $r->requisition_status ?? '—' }}</span>
@@ -121,7 +125,7 @@
               {{-- INTEGER formatting for money/qty --}}
               <td class="text-end">
                 @if(isset($r->estimated_cost_bdt) && is_numeric($r->estimated_cost_bdt))
-                  {{ number_format((int)$r->estimated_cost_bdt, 0) }}
+                  {{ $r->estimated_cost_bdt, 0 }}
                 @else
                   —
                 @endif
@@ -139,7 +143,7 @@
               </td>
               <td class="text-end">
                 @if(isset($r->official_estimated_cost_bdt) && is_numeric($r->official_estimated_cost_bdt))
-                  {{ number_format((int)$r->official_estimated_cost_bdt, 0) }}
+                  {{ $r->official_estimated_cost_bdt, 0}}
                 @else
                   —
                 @endif
@@ -163,6 +167,16 @@
       {{ $records->links() }}
     </div>
   </div>
+  <style>
+    .line-clamp-2{
+       width: 220px;  
+      display: -webkit-box;
+      -webkit-line-clamp: 3;        /* limit to 2 lines */
+      -webkit-box-orient: vertical;
+      overflow: hidden;              /* hide the rest */
+      white-space: normal;           /* allow wrapping */
+    }
+  </style>
 </div>
 
 {{-- jQuery + DataTables CDN --}}
@@ -179,6 +193,7 @@
       order: [[1, 'asc']],  // sort by Package No by default
       pageLength: 10,
       lengthMenu: [10, 25, 50, 100],
+      searching:false,
       columnDefs: [
         { targets: '_all', className: 'align-middle' },
         // Make currency columns align right for readability

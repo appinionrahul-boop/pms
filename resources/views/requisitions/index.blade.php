@@ -66,6 +66,17 @@
             </select>
           </div>
 
+          {{-- Assigned Person --}}
+          <div class="col-md-2">
+            <label for="officer_name" class="form-label">Assigned Person</label>
+            <select id="officer_name" name="officer_name" class="form-control">
+              <option value="">All</option>
+              @foreach($officers as $off)
+                <option value="{{ $off->name }}" @selected(($filters['officer_name'] ?? null) == $off->name)>{{ $off->name }}</option>
+              @endforeach
+            </select>
+          </div>
+
           {{-- Start Date --}}
           <div class="col-md-2">
             <label for="date_from" class="form-label">Start Date</label>
@@ -116,9 +127,19 @@
               <tr class="text-center">
                 <td class="text-center">{{ $r->package->package_id ?? '—' }}</td>
                 <td class="text-center">{{ $r->package_no ?? '—' }}</td>
-                <td style="max-width:320px" class="text-center">{{ $r->description ?? '—' }}</td>
-                <td class="text-center">{{ $r->method->name ?? '—' }}</td>
-                <td class="text-center">{{ $r->status->name ?? '—' }}</td>
+                <td>
+                   <div class="line-clamp-2 mx-auto" style="max-width: 460px;" title="{{ $r->description }}">
+                  {{ $r->description ?? '—' }}
+                </div>  
+               </td>
+                <td class="text-center ">
+                   <span class="badge bg-gradient-info">  {{ $r->method->name ?? '—' }}</span>
+    
+                
+                </td>
+                <td class="text-center">
+                 <span class="badge bg-gradient-secondary">   {{ $r->status->name ?? '—' }}</span>  
+               </td>
                 <td class="text-center">{{ $r->vendor_name ?? '—' }}</td>
                 <td class="text-center">{{ $r->department->name ?? '—' }}</td>
                 <td class="text-center">{{ $r->procurementType->name ?? '—' }}</td>
@@ -148,6 +169,16 @@
 
     </div>
   </div>
+  <style>
+    .line-clamp-2{
+       width: 220px;  
+      display: -webkit-box;
+      -webkit-line-clamp: 3;        /* limit to 2 lines */
+      -webkit-box-orient: vertical;
+      overflow: hidden;              /* hide the rest */
+      white-space: normal;           /* allow wrapping */
+    }
+  </style>
 </div>
 
 {{-- jQuery + DataTables CDN --}}

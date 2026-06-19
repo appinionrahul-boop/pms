@@ -1,3 +1,5 @@
+@php use Illuminate\Support\Facades\Storage; @endphp
+
 @extends('layouts.user_type.auth')
 
 @section('content')
@@ -14,8 +16,8 @@
       {{-- Package Info --}}
       <h6 class="mb-3">Package Information</h6>
       <div class="row mb-2">
-        <div class="col-md-3"><strong>Package ID:</strong> {{ $requisition->package->package_id ?? '—' }}</div>
         <div class="col-md-3"><strong>Package No:</strong> {{ $requisition->package_no }}</div>
+        <div class="col-md-3"><strong>ERP Requisition No:</strong> {{ $requisition->erp_requisition_no ?? '—' }}</div>
         <div class="col-md-6"><strong>Description:</strong> {{ $requisition->description }}</div>
       </div>
       <br>
@@ -35,7 +37,7 @@
       </div>
 
       <div class="row mb-2">
-        <div class="col-md-3"><strong>Quantity:</strong> {{ $requisition->quantity ?? '—' }}</div>
+        <div class="col-md-3"><strong>Quantity:</strong> {{ (int) $requisition->quantity ?? '—' }}</div>
         <div class="col-md-3"><strong>Unit:</strong> {{ $requisition->unit->name ?? '—' }}</div>
         <div class="col-md-3"><strong>Estimated Cost:</strong> {{ number_format((float)($requisition->estimated_cost_bdt ?? 0), 2) }}</div>
         <div class="col-md-3"><strong>Official Est. Cost:</strong> {{ number_format((float)($requisition->official_estimated_cost_bdt ?? 0), 2) }}</div>
@@ -55,9 +57,10 @@
 
       <div class="row mb-2">
         <div class="col-md-6"><strong>Reference Annex:</strong>
-          @if($requisition->reference_annex)
+        <a href="{{ route('requisitions.annex', $requisition) }}" target="_blank" rel="noopener">Download</a> 
+          <!-- @if($requisition->reference_annex)
             <a href="{{ asset('storage/'.$requisition->reference_annex) }}" target="_blank">Download</a>
-          @else — @endif
+          @else — @endif -->
         </div>
         <div class="col-md-6"><strong>Tech Spec File:</strong>
           @if($requisition->tech_spec_file)
@@ -70,27 +73,77 @@
         <div class="col-md-12"><strong>Comments:</strong><br>{{ $requisition->comments ?? '—' }}</div>
       </div>
        <br>
+
+      {{-- Status-wise Execution Dates --}}
+      <h6 class="mt-4 mb-3">Status-wise Execution Dates</h6>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th class="text-center" style="width:60px;">#</th>
+              <th>Requisition Status</th>
+              <th class="text-center">Execution Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            @php
+              // Map each status to its own dedicated execution-date column.
+              $statusDateCols = [
+                'Initiate'             => 'initiate_date',
+                'Tender Opened'        => 'tender_opened_date',
+                'Evaluation Completed' => 'evaluation_completed_date',
+                'Contract Signed'      => 'signing_date',
+                'Delivered'            => 'delivery_date',
+              ];
+            @endphp
+            @foreach($statuses as $i => $st)
+              @php
+                $col      = $statusDateCols[$st->name] ?? null;
+                $execDate = $col ? $requisition->{$col} : null;
+                $isCurrent = ($st->id == $requisition->requisition_status_id);
+              @endphp
+              <tr class="{{ $isCurrent ? 'table-active fw-semibold' : '' }}">
+                <td class="text-center">{{ $i + 1 }}</td>
+                <td>
+                  {{ $st->name }}
+                  @if($isCurrent)
+                    <span class="badge bg-gradient-primary ms-1">Current</span>
+                  @endif
+                </td>
+                <td class="text-center">
+                  {{ $execDate ? \Carbon\Carbon::parse($execDate)->format('Y-m-d') : '—' }}
+                </td>
+              </tr>
+            @endforeach
+          </tbody>
+        </table>
+      </div>
+      <br>
       {{-- Technical Specs --}}
       <h6 class="mt-4 mb-3">Technical Specifications</h6>
       <div class="table-responsive">
         <table class="table table-bordered">
           <thead>
             <tr>
-              <th>Spec Name</th>
-              <th class="text-end">Quantity</th>
-              <th class="text-end">Unit Price (BDT)</th>
-              <th class="text-end">Total Price (BDT)</th>
-              <th class="text-end">ERP Code</th>
+              <th class="text-center">ERP Code</th>
+              <th>Item Name</th>
+                <th class="text-center">Specification</th>
+              <th class="text-center">Quantity</th>
+              <th class="text-center">Unit Price (BDT)</th>
+              <th class="text-center">Total Price (BDT)</th>
+             
             </tr>
           </thead>
           <tbody>
             @forelse($specs as $s)
               <tr>
-                <td>{{ $s->spec_name }}</td>
-                <td class="text-end">{{ $s->quantity }}</td>
-                <td class="text-end">{{ number_format((float)($s->unit_price_bdt ?? 0), 2) }}</td>
-                <td class="text-end">{{ number_format((float)($s->total_price_bdt ?? 0), 2) }}</td>
-                <td>{{ $s->erp_code }}</td>
+                <td class="text-center" >{{ $s->erp_code }}</td>
+                <td class="text-center" >{{ $s->spec_name }}</td>
+                <td class="text-center" >{{ $s->specification }}</td>
+                <td  class="text-center" >{{ (int) $s->quantity }}</td>
+                <td class="text-center">{{ number_format((float)($s->unit_price_bdt ?? 0), 2) }}</td>
+                <td  class="text-center" >{{ number_format((float)($s->total_price_bdt ?? 0), 2) }}</td>
+                
               </tr>
             @empty
               <tr>

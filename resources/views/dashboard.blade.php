@@ -4,6 +4,13 @@
 @php
   $selStart = $start ?? null;
   $selEnd   = $end ?? null;
+
+  // pass date range to any link that should respect the dashboard filter
+  $range = [
+    'date_from' => $selStart,
+    'date_to'   => $selEnd,
+  ];
+  $pkgRange = ['start' => $selStart, 'end' => $selEnd];
 @endphp
 
 {{-- ===== Filters: Start Date & End Date ===== --}}
@@ -49,14 +56,11 @@
     –
     <strong>{{ \Carbon\Carbon::parse($selEnd)->format('d M Y') }}</strong>
   @elseif (!empty($selStart))
-    from <strong>{{ \Carbon\Carbon::parse($selStart)->format('d M Y') }}</strong>
-    onwards
+    from <strong>{{ \Carbon\Carbon::parse($selStart)->format('d M Y') }}</strong> onwards
   @elseif (!empty($selEnd))
     until <strong>{{ \Carbon\Carbon::parse($selEnd)->format('d M Y') }}</strong>
   @endif
 </p>
-
-{{-- (keep the rest of your KPI cards, tables, etc. unchanged) --}}
 
 {{-- Equalize control heights --}}
 <style>
@@ -70,11 +74,10 @@
   }
 </style>
 
-{{-- Current filter label --}}
+{{-- Month/Year label (kept) --}}
 <p class="text-muted mb-4">
-  
   @if (empty($selYear))
-    <!-- <strong>All time</strong> -->
+    <!-- All time -->
   @elseif (empty($selMonth))
     <strong>All {{ $selYear }}</strong>
   @else
@@ -86,20 +89,23 @@
 <div class="row g-3 mb-4">
   <div class="col-md-4">
     <div class="card p-3">
-       <a href="{{ route('packages.all') }}" class="stretched-link"></a>
+      {{-- (packages.all doesn’t take dates; leaving as-is) --}}
+      <a href="{{ route('packages.all', $pkgRange) }}" class="stretched-link"></a>
       <div class="text-muted text-center">Total Packages</div>
       <div class="h4 m-0 text-center">{{ $packagesTotal }}</div>
     </div>
   </div>
   <div class="col-md-4">
     <div class="card p-3">
-       <a href="{{ route('requisitions.index') }}" class="stretched-link"></a>
+      {{-- total requisitions respecting date range --}}
+      <a href="{{ route('requisitions.index', $range) }}" class="stretched-link"></a>
       <div class="text-muted text-center">Total Requisitions</div>
       <div class="h4 m-0 text-center">{{ $requisitionsTotal }}</div>
     </div>
   </div>
   <div class="col-md-4">
     <div class="card p-3">
+      {{-- packages.index doesn’t support date filtering; keep link as-is --}}
       <a href="{{ route('packages.index') }}" class="stretched-link"></a>
       <div class="text-muted text-center">Packages w/o Requisition</div>
       <div class="h4 m-0 text-center">{{ $packagesWithoutReqTotal }}</div>
@@ -107,36 +113,126 @@
   </div>
 </div>
 
-{{-- ===== 5 Status Cards ===== --}}
+{{-- ===== 5 Status Cards (clicks preserve date range) ===== --}}
 <div class="row g-3 mb-4">
+  {{-- Initiate --}}
   <div class="col-md-2">
-    <div class="card p-3 text-center">
+    <div class="card p-3 text-center position-relative">
+      <a href="{{ route('requisitions.index',
+            array_merge($range, ['status_id' => $statusIds['Initiate'] ?? null])) }}"
+         class="stretched-link"></a>
       <div class="text-muted small text-center">Initiate</div>
       <div class="h4 m-0 text-center">{{ $initiateCount }}</div>
     </div>
   </div>
+
+  {{-- Tender Opened --}}
   <div class="col-md-3">
-    <div class="card p-3 text-center">
+    <div class="card p-3 text-center position-relative">
+      <a href="{{ route('requisitions.index',
+            array_merge($range, ['status_id' => $statusIds['Tender Opened'] ?? null])) }}"
+         class="stretched-link"></a>
       <div class="text-muted small text-center">Tender Opened</div>
       <div class="h4 m-0 text-center">{{ $tenderOpenedCount }}</div>
     </div>
   </div>
+
+  {{-- Evaluation Completed --}}
   <div class="col-md-3">
-    <div class="card p-3 text-center">
+    <div class="card p-3 text-center position-relative">
+      <a href="{{ route('requisitions.index',
+            array_merge($range, ['status_id' => $statusIds['Evaluation Completed'] ?? null])) }}"
+         class="stretched-link"></a>
       <div class="text-muted small text-center">Evaluation Completed</div>
       <div class="h4 m-0 text-center">{{ $evaluationCount }}</div>
     </div>
   </div>
+
+  {{-- Contract Signed --}}
   <div class="col-md-2">
-    <div class="card p-3 text-center">
+    <div class="card p-3 text-center position-relative">
+      <a href="{{ route('requisitions.index',
+            array_merge($range, ['status_id' => $statusIds['Contract Signed'] ?? null])) }}"
+         class="stretched-link"></a>
       <div class="text-muted small text-center">Contract Signed</div>
       <div class="h4 m-0 text-center">{{ $contractSignedCount }}</div>
     </div>
   </div>
+
+  {{-- Delivered --}}
   <div class="col-md-2">
-    <div class="card p-3 text-center">
+    <div class="card p-3 text-center position-relative">
+      <a href="{{ route('requisitions.index',
+            array_merge($range, ['status_id' => $statusIds['Delivered'] ?? null])) }}"
+         class="stretched-link"></a>
       <div class="text-muted small text-center">Delivered</div>
       <div class="h4 m-0 text-center">{{ $deliveredCount }}</div>
+    </div>
+  </div>
+</div>
+
+{{-- ===== Assigned Person Wise Requisition Status (with % summary) ===== --}}
+<div class="row">
+  <div class="col-12">
+    <div class="card mb-4">
+      <div class="card-header text-center">
+        Assigned Person Wise Requisition Status
+        <small class="text-muted">(count &amp; % of person's total)</small>
+      </div>
+      <div class="card-body p-0 table-responsive">
+        <table class="table table-sm table-striped table-bordered align-middle mb-0 text-center">
+          <thead class="table-light">
+            <tr class="align-middle">
+              <th class="text-center">Assigned Person</th>
+              @foreach($allStatuses as $st)
+                <th style="color:{{ $st->color ?: '#6c757d' }};">{{ $st->name }}</th>
+              @endforeach
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody class="align-middle">
+            @forelse($assignedPersonStats as $row)
+              <tr class="align-middle">
+                <td class="text-center fw-semibold">{{ $row['person'] }}</td>
+                @foreach($allStatuses as $st)
+                  @php
+                    $cnt = $row['counts'][$st->id] ?? 0;
+                    $pct = $row['total'] > 0 ? round(($cnt / $row['total']) * 100, 1) : 0;
+                    $pctColor = $st->color ?: '#6c757d';
+                  @endphp
+                  <td>
+                    @if($cnt > 0)
+                      <div class="fw-semibold">{{ $cnt }}</div>
+                      <span class="badge rounded-pill" style="color:#fff;background-color:{{ $pctColor }};">{{ $pct }}%</span>
+                    @else
+                      <span class="text-muted">0</span>
+                    @endif
+                  </td>
+                @endforeach
+                <td class="fw-bold">{{ $row['total'] }}</td>
+              </tr>
+            @empty
+              <tr class="align-middle">
+                <td colspan="{{ $allStatuses->count() + 2 }}" class="text-center text-muted">No data available.</td>
+              </tr>
+            @endforelse
+          </tbody>
+          @if(!empty($assignedPersonStats))
+            <tfoot class="table-light fw-bold">
+              <tr class="align-middle">
+                <td class="text-center">Grand Total</td>
+                @foreach($allStatuses as $st)
+                  @php
+                    $colTotal = collect($assignedPersonStats)->sum(fn($r) => $r['counts'][$st->id] ?? 0);
+                  @endphp
+                  <td>{{ $colTotal }}</td>
+                @endforeach
+                <td>{{ collect($assignedPersonStats)->sum('total') }}</td>
+              </tr>
+            </tfoot>
+          @endif
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -202,7 +298,7 @@
   </div>
 </div>
 
-{{-- Equalize control heights --}}
+{{-- Equalize control heights (selects only) --}}
 <style>
   .control-eq{
     min-height: 52px;   /* larger, consistent height for selects & buttons */
@@ -213,5 +309,4 @@
     padding-bottom: .65rem;
   }
 </style>
-
 @endsection

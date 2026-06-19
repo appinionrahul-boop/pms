@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\TechnicalSpecsImport;
 use Yajra\DataTables\Facades\DataTables;
+use Symfony\Component\HttpFoundation\Response;
 
 class RequisitionController extends Controller
 {
@@ -51,6 +52,7 @@ class RequisitionController extends Controller
         $request->validate([
             'package_id'                  => ['required','exists:packages,id'],
             'package_no'                  => ['required','string','max:50'],
+            'erp_requisition_no'          => ['nullable','string','max:100'],
             'description'                 => ['nullable','string','max:2000'],
             'procurement_method_id'       => ['nullable','exists:procurement_methods,id'],
             'unit_id'                     => ['nullable','exists:units,id'],
@@ -65,6 +67,9 @@ class RequisitionController extends Controller
             'requisition_status_id'       => ['nullable','exists:requisition_statuses,id'],
             'approving_authority_id'      => ['nullable','exists:approving_authorities,id'],
             'signing_date'                => ['nullable','date'],
+            'initiate_date'               => ['nullable','date'],
+            'tender_opened_date'          => ['nullable','date'],
+            'evaluation_completed_date'   => ['nullable','date'],
             'lc_status_id'                => ['nullable','exists:lc_statuses,id'],
             'reference_link'              => ['nullable','url'],
             'reference_annex'             => ['nullable','file','max:5120'],
@@ -82,6 +87,7 @@ class RequisitionController extends Controller
         $req = Requisition::create([
             'package_id'                  => $request->package_id,
             'package_no'                  => $request->package_no,
+            'erp_requisition_no'          => $request->erp_requisition_no,
             'description'                 => $request->description,
             'procurement_method_id'       => $request->procurement_method_id,
             'unit_id'                     => $request->unit_id,
@@ -96,6 +102,9 @@ class RequisitionController extends Controller
             'requisition_status_id'       => $request->requisition_status_id,
             'approving_authority_id'      => $request->approving_authority_id,
             'signing_date'                => $request->signing_date,
+            'initiate_date'               => $request->initiate_date,
+            'tender_opened_date'          => $request->tender_opened_date,
+            'evaluation_completed_date'   => $request->evaluation_completed_date,
             'lc_status_id'                => $request->lc_status_id,
             'reference_link'              => $request->reference_link,
             'reference_annex'             => $annexPath,
@@ -157,7 +166,10 @@ class RequisitionController extends Controller
 
         $specs = \App\Models\TechnicalSpec::where('package_id', $requisition->package_id)->get();
 
-        return view('requisitions.show', compact('requisition','specs'));
+        // All statuses (in order) for the status-wise execution date list
+        $statuses = RequisitionStatus::orderBy('id')->get();
+
+        return view('requisitions.show', compact('requisition','specs','statuses'));
     }
 
     public function edit(\App\Models\Requisition $requisition)
@@ -183,6 +195,7 @@ class RequisitionController extends Controller
     public function update(Request $request, \App\Models\Requisition $requisition)
     {
         $request->validate([
+            'erp_requisition_no'          => ['nullable','string','max:100'],
             'description'                 => ['nullable','string','max:2000'],
             'procurement_method_id'       => ['nullable','exists:procurement_methods,id'],
             'unit_id'                     => ['nullable','exists:units,id'],
@@ -197,6 +210,9 @@ class RequisitionController extends Controller
             'requisition_status_id'       => ['nullable','exists:requisition_statuses,id'],
             'approving_authority_id'      => ['nullable','exists:approving_authorities,id'],
             'signing_date'                => ['nullable','date'],
+            'initiate_date'               => ['nullable','date'],
+            'tender_opened_date'          => ['nullable','date'],
+            'evaluation_completed_date'   => ['nullable','date'],
             'lc_status_id'                => ['nullable','exists:lc_statuses,id'],
             'reference_link'              => ['nullable','url'],
             'reference_annex'             => ['nullable','file','max:5120'],
@@ -280,7 +296,7 @@ class RequisitionController extends Controller
     public function index(Request $request)
 {
     $filters = $request->only([
-        'k','status_id','procurement_type_id','procurement_method_id','lc_status_id','date_from','date_to',
+        'k','status_id','procurement_type_id','procurement_method_id','lc_status_id','date_from','date_to','officer_name',
     ]);
 
     // per-page (defaults to 25). Clamp to safe values.
@@ -305,10 +321,11 @@ class RequisitionController extends Controller
     if (!empty($filters['procurement_type_id']))   $q->where('procurement_type_id',    $filters['procurement_type_id']);
     if (!empty($filters['procurement_method_id'])) $q->where('procurement_method_id',  $filters['procurement_method_id']);
     if (!empty($filters['lc_status_id']))          $q->where('lc_status_id',           $filters['lc_status_id']);
+    if (!empty($filters['officer_name']))          $q->where('officer_name',           $filters['officer_name']);
     if (!empty($filters['date_from']))             $q->whereDate('created_at','>=',$filters['date_from']);
     if (!empty($filters['date_to']))               $q->whereDate('created_at','<=',$filters['date_to']);
 
-    $requisitions = $q->orderByDesc('created_at')
+    $requisitions = $q->orderByDesc('created_at', 'DESC')
         ->paginate($perPage)
         ->withQueryString();
 
@@ -319,10 +336,60 @@ class RequisitionController extends Controller
         'types'        => ProcurementType::orderBy('name')->get(),
         'methods'      => ProcurementMethod::orderBy('name')->get(),
         'lcStatuses'   => LcStatus::orderBy('name')->get(),
+        'officers'     => Officer::orderBy('name')->get(),
         'perPage'      => $perPage,
         'allowedPerPage' => $allowed,
     ]);
 }
+   public function summary(Request $request)
+{
+    $filters = $request->only([
+        'k','status_id','procurement_type_id','procurement_method_id','lc_status_id','date_from','date_to','officer_name',
+    ]);
+
+    $perPage = (int) $request->input('per_page', 25);
+    $allowed = [10,25,50,100,200];
+    if (!in_array($perPage, $allowed, true)) {
+        $perPage = 25;
+    }
+
+    $q = Requisition::query()
+        ->with(['package','status','procurementType','method','lcStatus']);
+
+    if (!empty($filters['k'])) {
+        $k = '%'.$filters['k'].'%';
+        $q->where(function($x) use ($k){
+            $x->where('package_no','like',$k)
+              ->orWhere('erp_requisition_no','like',$k)
+              ->orWhere('vendor_name','like',$k)
+              ->orWhere('description','like',$k);
+        });
+    }
+    if (!empty($filters['status_id']))             $q->where('requisition_status_id',  $filters['status_id']);
+    if (!empty($filters['procurement_type_id']))   $q->where('procurement_type_id',    $filters['procurement_type_id']);
+    if (!empty($filters['procurement_method_id'])) $q->where('procurement_method_id',  $filters['procurement_method_id']);
+    if (!empty($filters['lc_status_id']))          $q->where('lc_status_id',           $filters['lc_status_id']);
+    if (!empty($filters['officer_name']))          $q->where('officer_name',           $filters['officer_name']);
+    if (!empty($filters['date_from']))             $q->whereDate('created_at','>=',$filters['date_from']);
+    if (!empty($filters['date_to']))               $q->whereDate('created_at','<=',$filters['date_to']);
+
+    $requisitions = $q->orderByDesc('created_at')
+        ->paginate($perPage)
+        ->withQueryString();
+
+    return view('requisitions.summary', [
+        'requisitions' => $requisitions,
+        'filters'      => $filters,
+        'statuses'     => RequisitionStatus::orderBy('name')->get(),
+        'types'        => ProcurementType::orderBy('name')->get(),
+        'methods'      => ProcurementMethod::orderBy('name')->get(),
+        'lcStatuses'   => LcStatus::orderBy('name')->get(),
+        'officers'     => Officer::orderBy('name')->get(),
+        'perPage'      => $perPage,
+        'allowedPerPage' => $allowed,
+    ]);
+}
+
    public function destroy(Requisition $requisition)
 {
     try {
@@ -346,6 +413,22 @@ class RequisitionController extends Controller
             ->route('requisitions.index')
             ->with('error', 'Failed to delete requisition: ' . $e->getMessage());
     }
+}
+
+public function annex(\App\Models\Requisition $requisition)
+{
+    if (!$requisition->reference_annex) {
+        abort(404, 'No annex file for this requisition.');
+    }
+
+    $path = Storage::disk('public')->path($requisition->reference_annex);
+
+    if (!is_file($path)) {
+        abort(404, 'File missing on disk: '.$requisition->reference_annex);
+    }
+
+    // View in browser; use ->download($path) if you want a download prompt
+    return response()->file($path); // or: return response()->download($path);
 }
 
 

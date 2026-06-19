@@ -32,12 +32,12 @@
 
             <div class="row">
               <div class="col-md-6">
-                <label class="form-control-label">Package ID</label>
-                <input type="text" class="form-control" value="{{ $package->package_id }}" readonly>
-              </div>
-              <div class="col-md-6">
                 <label class="form-control-label">Package No</label>
                 <input type="text" class="form-control" value="{{ $package->package_no }}" readonly>
+              </div>
+              <div class="col-md-6">
+                <label class="form-control-label">ERP Requisition No</label>
+                <input type="text" name="erp_requisition_no" class="form-control" value="{{ old('erp_requisition_no') }}">
               </div>
             </div>
 
@@ -48,12 +48,47 @@
               </div>
               <div class="col-md-6">
                 <label class="form-control-label">Requisition Status</label>
-                <select name="requisition_status_id" class="form-control">
+                <select name="requisition_status_id" id="requisition_status_id" class="form-control">
                   <option value="">-- Select Status --</option>
                   @foreach($statuses as $s)
-                    <option value="{{ $s->id }}" @selected(old('requisition_status_id') == $s->id)>{{ $s->name }}</option>
+                    <option value="{{ $s->id }}" data-name="{{ $s->name }}" @selected(old('requisition_status_id') == $s->id)>{{ $s->name }}</option>
                   @endforeach
                 </select>
+              </div>
+            </div>
+
+            {{-- Status-wise Execution Dates (each saved individually) --}}
+            <div class="card bg-light border mt-3">
+              <div class="card-body py-3">
+                <h6 class="mb-3">Status-wise Execution Dates</h6>
+                <div class="row">
+                  <div class="col-md-4">
+                    <label class="form-control-label">Requisition Receiving Date</label>
+                    <input type="date" name="requisition_receiving_date" class="form-control" value="{{ old('requisition_receiving_date') }}">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-control-label">Initiate Date</label>
+                    <input type="date" name="initiate_date" class="form-control" value="{{ old('initiate_date') }}">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-control-label">Tender Opened Date</label>
+                    <input type="date" name="tender_opened_date" class="form-control" value="{{ old('tender_opened_date') }}">
+                  </div>
+                </div>
+                <div class="row mt-3">
+                  <div class="col-md-4">
+                    <label class="form-control-label">Evaluation Completed Date</label>
+                    <input type="date" name="evaluation_completed_date" class="form-control" value="{{ old('evaluation_completed_date') }}">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-control-label">Signing Date <span class="text-muted">(Contract Signed)</span></label>
+                    <input type="date" name="signing_date" class="form-control" value="{{ old('signing_date') }}">
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-control-label">Delivery Date <span class="text-muted">(Delivered)</span></label>
+                    <input type="date" name="delivery_date" class="form-control" value="{{ old('delivery_date') }}">
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -135,17 +170,6 @@
                 <input type="number" step="0.01" name="official_estimated_cost_bdt" class="form-control" value="{{ old('official_estimated_cost_bdt') }}">
               </div>
               <div class="col-md-6">
-                <label class="form-control-label">Requisition Receiving Date</label>
-                <input type="date" name="requisition_receiving_date" class="form-control" value="{{ old('requisition_receiving_date') }}">
-              </div>
-            </div>
-
-            <div class="row mt-3">
-              <div class="col-md-6">
-                <label class="form-control-label">Delivery Date</label>
-                <input type="date" name="delivery_date" class="form-control" value="{{ old('delivery_date') }}">
-              </div>
-              <div class="col-md-6">
                 <label class="form-control-label">Approving Authority</label>
                 <select name="approving_authority_id" class="form-control">
                   <option value="">-- Select --</option>
@@ -157,10 +181,6 @@
             </div>
 
             <div class="row mt-3">
-              <div class="col-md-6">
-                <label class="form-control-label">Signing Date</label>
-                <input type="date" name="signing_date" class="form-control" value="{{ old('signing_date') }}">
-              </div>
               <div class="col-md-6">
                 <label class="form-control-label">LC Status</label>
                 <select name="lc_status_id" class="form-control">
@@ -180,7 +200,10 @@
               <div class="col-md-6">
                 <label class="form-control-label">Tech Spec (Excel)</label>
                 <input type="file" name="tech_spec" class="form-control" accept=".xlsx,.xls,.csv">
-                <small class="text-muted">Headers: <code>spec_name, qty, unit_price, total_price</code></small>
+                <a href="{{ route('techspecs.sample') }}"
+                  class="link-danger text-sm fw-semibold d-inline-flex align-items-center">
+                  <i class="fas fa-download me-1"></i> Sample Excel
+                </a>
               </div>
             </div>
 

@@ -1,6 +1,22 @@
 @extends('layouts.user_type.auth')
 
 @section('content')
+
+<style>
+  .pkg-desc { text-align: left !important; }
+  .pkg-desc-text{
+    display: inline-block;
+    max-width: 320px;          /* adjust as needed */
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    text-align: justify;       /* justify lines */
+    text-justify: inter-word;  /* better spacing on supported browsers */
+    hyphens: auto;             /* nicer breaks for long words */
+  }
+</style>
+
+
 <div class="container-fluid py-4">
   <div class="row">
     <div class="col-12">
@@ -21,6 +37,10 @@
                 <i class="fas fa-file-upload me-1"></i> Bulk Upload (Excel)
               </button>
             </form>
+            {{-- Download Sample Excel --}}
+            <a href="{{ route('packages.sample') }}" class="btn btn-outline-secondary btn-sm">
+              <i class="fas fa-download me-1"></i> Sample Excel
+            </a>
 
             {{-- Add New --}}
             <a href="{{ route('packages.create') }}" class="btn bg-gradient-primary btn-sm">
@@ -41,6 +61,11 @@
               </button>
             </div>
             <div class="col-md-2">
+             
+                <a href="{{ route('packages.index') }}" class="btn btn-outline-dark w-100">Reset</a>
+           
+            </div>
+            <div class="col-md-2">
             </div>
           </form>
         </div>
@@ -56,7 +81,7 @@
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Description</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Procurement Method</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-end">Estimated Costs (BDT)</th>
-                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-end">Action</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -64,15 +89,43 @@
                   <tr style="text-align: center;">
                     <td><span class="text-sm">{{ $pkg->package_id }}</span></td>
                     <td><span class="text-sm fw-semibold">{{ $pkg->package_no }}</span></td>
-                    <td>
-                      <span class="text-sm text-truncate d-inline-block" style="max-width: 320px;">
-                        {{ $pkg->description }}
-                      </span>
+                    <!--<td>-->
+                    <!--  <span class="text-sm text-truncate d-inline-block" style="max-width: 320px;">-->
+                    <!--    {{ $pkg->description }}-->
+                    <!--  </span>-->
+                    <!--</td>-->
+                    <!--<td>-->
+                    <!--  @php $desc = trim((string)($pkg->description ?? '')); @endphp-->
+                    <!--  @if($desc !== '')-->
+                    <!--    <button type="button"-->
+                    <!--            class="btn btn-link p-0 text-decoration-underline desc-trigger text-sm"-->
+                    <!--            data-desc="{{ e($desc) }}"-->
+                    <!--            data-title="Package {{ e($pkg->package_no) }} — Description"-->
+                    <!--            data-bs-toggle="modal"-->
+                    <!--            data-bs-target="#descModal"-->
+                    <!--            title="Click to view full description">-->
+                    <!--      <span class="text-truncate d-inline-block" style="max-width: 320px;">-->
+                    <!--        {{ $pkg->description }}-->
+                    <!--      </span>-->
+                    <!--    </button>-->
+                    <!--  @else-->
+                    <!--    <span class="text-sm text-muted">—</span>-->
+                    <!--  @endif-->
+                    <!--</td>-->
+                   <td class="pkg-desc">
+                      @php $desc = trim((string)($pkg->description ?? '')); @endphp
+                      @if($desc !== '')
+                        <span class="pkg-desc-text">{{ $desc }}</span>
+                      @else
+                        <span class="text-sm text-muted">—</span>
+                      @endif
                     </td>
+
+
                     <td>
                       <span class="badge bg-gradient-info">{{ optional($pkg->method)->name ?? '—' }}</span>
                     </td>
-                    <td class="text-end">
+                    <td class="text-center">
                       <span class="text-sm">{{ number_format((float)($pkg->estimated_cost_bdt ?? 0), 2) }}</span>
                     </td>
                     <td class="text-end">
@@ -127,3 +180,34 @@
   </div>
 </div>
 @endsection
+
+<!-- Description Modal -->
+<!--<div class="modal fade" id="descModal" tabindex="-1" aria-labelledby="descModalLabel" aria-hidden="true">-->
+<!--  <div class="modal-dialog modal-lg modal-dialog-scrollable">-->
+<!--    <div class="modal-content">-->
+<!--      <div class="modal-header">-->
+<!--        <h6 class="modal-title" id="descModalLabel">Description</h6>-->
+<!--        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>-->
+<!--      </div>-->
+<!--      <div class="modal-body">-->
+<!--        <pre class="mb-0" id="descModalBody" style="white-space:pre-wrap; font-family: inherit;"></pre>-->
+<!--      </div>-->
+<!--      <div class="modal-footer">-->
+<!--        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>-->
+<!--      </div>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</div>-->
+<!-- <script>
+  document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.desc-trigger');
+    if (!btn) return;
+    const title = btn.getAttribute('data-title') || 'Description';
+    const body  = btn.getAttribute('data-desc') || '—';
+    document.getElementById('descModalLabel').textContent = title;
+    document.getElementById('descModalBody').textContent  = body;
+  });
+</script> -->
+
+
+

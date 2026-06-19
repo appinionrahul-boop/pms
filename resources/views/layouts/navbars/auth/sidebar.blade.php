@@ -1,4 +1,4 @@
-<aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3" id="sidenav-main">
+<aside class="sidenav navbar navbar-vertical navbar-expand-xs border-0 border-radius-xl my-3 fixed-start ms-3 overflow-y: auto;" id="sidenav-main">
   <div class="sidenav-header">
     <i class="fas fa-times p-3 cursor-pointer text-secondary opacity-5 position-absolute end-0 top-0 d-none d-xl-none" aria-hidden="true" id="iconSidenav"></i>
     <a class="align-items-center d-flex m-0 navbar-brand text-wrap" href="{{ route('dashboard') }}">
@@ -66,7 +66,7 @@
         <h6 class="ps-4 ms-2 text-uppercase text-xs font-weight-bolder opacity-6">Requisition Management</h6>
       </li> -->
       <li class="nav-item pb-2">
-        <a class="nav-link {{ Request::is('requisitions*') ? 'active' : '' }}" href="{{ route('requisitions.index') }}">
+        <a class="nav-link {{ (Request::is('requisitions*') && !Request::is('requisitions/summary')) ? 'active' : '' }}" href="{{ route('requisitions.index') }}">
           <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
             {{-- Inline SVG (document) --}}
             <svg width="12px" height="12px" viewBox="0 0 40 44" xmlns="http://www.w3.org/2000/svg">
@@ -83,6 +83,28 @@
             </svg>
           </div>
           <span class="nav-link-text ms-1">Requisition Management</span>
+        </a>
+      </li>
+
+      {{-- Requisition Summary --}}
+      <li class="nav-item pb-2">
+        <a class="nav-link {{ Request::is('requisitions/summary') ? 'active' : '' }}" href="{{ route('requisitions.summary') }}">
+          <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+            {{-- Inline SVG (document) --}}
+            <svg width="12px" height="12px" viewBox="0 0 40 44" xmlns="http://www.w3.org/2000/svg">
+              <g fill="none" fill-rule="evenodd">
+                <g fill="#FFFFFF" fill-rule="nonzero">
+                  <g>
+                    <g>
+                      <path class="color-background" d="M40,40 L36.364,40 L36.364,3.636 L5.455,3.636 L5.455,0 L38.182,0 C39.185,0 40,0.815 40,1.818 L40,40 Z" opacity="0.6"/>
+                      <path class="color-background" d="M30.909,7.273 L1.818,7.273 C0.815,7.273 0,8.087 0,9.091 L0,41.818 C0,42.822 0.815,43.636 1.818,43.636 L30.909,43.636 C31.913,43.636 32.727,42.822 32.727,41.818 L32.727,9.091 C32.727,8.087 31.913,7.273 30.909,7.273 Z M18.182,34.545 L7.273,34.545 L7.273,30.909 L18.182,30.909 L18.182,34.545 Z M25.455,27.273 L7.273,27.273 L7.273,23.636 L25.455,23.636 L25.455,27.273 Z M25.455,20 L7.273,20 L7.273,16.364 L25.455,16.364 L25.455,20 Z"/>
+                    </g>
+                  </g>
+                </g>
+              </g>
+            </svg>
+          </div>
+          <span class="nav-link-text ms-1">Requisition Summary</span>
         </a>
       </li>
 
@@ -182,14 +204,29 @@
     </li>
   @endif
 @endauth
-
-    
-
-
-      
-
-
     </ul>
   </div>
 </aside>
 
+<style>
+  .g-sidenav-show .sidenav {
+  position: fixed !important;
+  top: 0; left: 0;
+  height: 100vh !important;
+  max-height: none !important;
+  overflow-y: hidden !important;
+  overflow-x: hidden !important;
+}
+
+
+.g-sidenav-show .sidenav .navbar-collapse {
+  overflow: visible !important;
+}
+
+
+.g-sidenav-show .main-content {
+  margin-left: 250px;              
+  min-height: 100vh;
+  overflow: auto;                  
+}
+</style>

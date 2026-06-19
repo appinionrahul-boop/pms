@@ -63,9 +63,10 @@ class DashboardController extends Controller
 
         $requisitionsTotal = $withPeriod(Requisition::query())->count();
 
-        $packagesWithoutReqTotal = $withPeriod(Package::query())
-            ->doesntHave('requisitions')
-            ->count();
+        // $packagesWithoutReqTotal = $withPeriod(Package::query())
+        //     ->doesntHave('requisitions')
+        //     ->count();
+        $packagesWithoutReqTotal = Package::whereDoesntHave('requisitions')->count();
 
         // ---------------------------------------------
         // Named status cards
@@ -147,10 +148,62 @@ class DashboardController extends Controller
             ->get();
 
         // ---------------------------------------------
+        // Assigned Person (officer) wise requisition status
+        // with percentage summary
+        // ---------------------------------------------
+        $allStatuses = RequisitionStatus::orderBy('id')->get(['id', 'name', 'color']);
+
+        $personStatusRows = $withPeriod(Requisition::query())
+            ->select('officer_name', 'requisition_status_id', DB::raw('COUNT(*) AS total'))
+            ->groupBy('officer_name', 'requisition_status_id')
+            ->get();
+
+        $assignedPersonStats = [];
+        foreach ($personStatusRows as $r) {
+            $person = trim((string) $r->officer_name);
+            if ($person === '') {
+                $person = 'Unassigned';
+            }
+
+            if (!isset($assignedPersonStats[$person])) {
+                $assignedPersonStats[$person] = [
+                    'person' => $person,
+                    'counts' => [], // status_id => count
+                    'total'  => 0,
+                ];
+            }
+
+            $count = (int) $r->total;
+            $assignedPersonStats[$person]['total'] += $count;
+            if (!is_null($r->requisition_status_id)) {
+                $sid = (int) $r->requisition_status_id;
+                $assignedPersonStats[$person]['counts'][$sid] =
+                    ($assignedPersonStats[$person]['counts'][$sid] ?? 0) + $count;
+            }
+        }
+
+        // Sort by total requisitions (desc)
+        uasort($assignedPersonStats, fn ($a, $b) => $b['total'] <=> $a['total']);
+        $assignedPersonStats = array_values($assignedPersonStats);
+
+        //Requistion status wise
+
+         $statusIds = RequisitionStatus::whereIn('name', [
+        'Initiate',
+        'Tender Opened',
+        'Evaluation Completed',
+        'Contract Signed',
+        'Delivered',
+             ])->pluck('id', 'name')->toArray();
+
+        // ---------------------------------------------
         // Return to view
         // $start / $end are strings for the form and label
         // ---------------------------------------------
-        return view('dashboard', compact(
+        return view('dashboard', compact(   
+            
+             'statusIds',
+
             // filters (strings for inputs/labels)
             'start', 'end',
 
@@ -161,7 +214,11 @@ class DashboardController extends Controller
             'initiateCount', 'evaluationCount', 'contractSignedCount', 'deliveredCount', 'tenderOpenedCount',
 
             // tables
-            'statusCounts', 'departmentCounts', 'typeCounts'
+            'statusCounts', 'departmentCounts', 'typeCounts',
+
+            // assigned person wise status breakdown
+            'allStatuses', 'assignedPersonStats',
+
         ));
     }
 }
