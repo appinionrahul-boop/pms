@@ -63,9 +63,6 @@ class DashboardController extends Controller
 
         $requisitionsTotal = $withPeriod(Requisition::query())->count();
 
-        // $packagesWithoutReqTotal = $withPeriod(Package::query())
-        //     ->doesntHave('requisitions')
-        //     ->count();
         $packagesWithoutReqTotal = Package::whereDoesntHave('requisitions')->count();
 
         // ---------------------------------------------
@@ -146,6 +143,16 @@ class DashboardController extends Controller
             ->groupBy('procurement_types.id', 'procurement_types.name')
             ->orderBy('procurement_types.name')
             ->get();
+
+        //Requistion status wise
+
+         $statusIds = RequisitionStatus::whereIn('name', [
+        'Initiate',
+        'Tender Opened',
+        'Evaluation Completed',
+        'Contract Signed',
+        'Delivered',
+             ])->pluck('id', 'name')->toArray();
 
         // ---------------------------------------------
         // Assigned Person (officer) wise requisition status

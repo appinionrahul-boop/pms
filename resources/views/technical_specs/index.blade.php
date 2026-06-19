@@ -127,7 +127,7 @@
       { targets: [5,6,7,8], className: 'text-end align-middle' },
       { targets: [0,1,2,3,4], className: 'align-middle' },
       { targets: 8, orderable: false },
-       { targets: SPEC_INDEX, className: 'text-start' },
+      { targets: 5, className: 'text-start' },
     ],
     language: {
       emptyTable: 'No specifications found.',

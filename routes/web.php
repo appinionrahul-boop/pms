@@ -43,6 +43,11 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('/requisitions/{requisition}/annex', [\App\Http\Controllers\RequisitionController::class, 'annex'])
     ->name('requisitions.annex');
 
+    Route::get('/run/alerts-delivery-once', function () {
+    Artisan::call('alerts:delivery');
+    return nl2br(e(Artisan::output() ?: 'Done'));
+});
+
     Route::get('/', [HomeController::class, 'home']);
 
 	Route::get('dashboard', [DashboardController::class, 'index'])
@@ -146,6 +151,9 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('/notifications/mark-all-seen', [NotificationController::class, 'markAllSeen'])
     ->name('notifications.markAllSeen'); // marks all unseen -> seen
 	
+    //Annex Download
+    Route::get('/requisitions/{requisition}/annex', [\App\Http\Controllers\RequisitionController::class, 'annex'])
+    ->name('requisitions.annex');
 });
 
 
