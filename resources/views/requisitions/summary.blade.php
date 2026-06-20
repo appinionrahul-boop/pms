@@ -114,6 +114,7 @@
               <th class="text-center">Description</th>
               <th class="text-center">Requisition Status</th>
               <th class="text-center">Assigned Officer</th>
+              <th class="text-center">% Status</th>
               <th class="text-center">Actions</th>
             </tr>
           </thead>
@@ -130,6 +131,23 @@
                   <span class="badge bg-gradient-secondary">{{ $r->status->name ?? '—' }}</span>
                 </td>
                 <td class="text-center">{{ $r->officer_name ?? '—' }}</td>
+                @php
+                  // Progress based on the current requisition status.
+                  $statusPctMap = [
+                    'Initiate'             => 20,
+                    'Tender Opened'        => 40,
+                    'Evaluation Completed' => 60,
+                    'Contract Signed'      => 80,
+                    'Delivered'            => 100,
+                  ];
+                  $statusPct = $statusPctMap[$r->status->name ?? ''] ?? 0;
+                  $pctClass = $statusPct >= 100 ? 'bg-gradient-success'
+                            : ($statusPct >= 60 ? 'bg-gradient-info'
+                            : ($statusPct >= 40 ? 'bg-gradient-warning' : 'bg-gradient-secondary'));
+                @endphp
+                <td class="text-center" data-order="{{ $statusPct }}">
+                  <span class="badge {{ $pctClass }}">{{ $statusPct }}%</span>
+                </td>
                 <td class="text-center">
                   <a href="{{ route('requisitions.show', $r) }}" class="btn btn-link text-secondary px-2 mb-0">
                     <i class="fas fa-eye me-1"></i> View
@@ -168,8 +186,8 @@
       lengthMenu: [10, 25, 50, 100],
       searching: false,               // server-side filters used instead
       columnDefs: [
-        { targets: 4, orderable: false, className: 'text-center align-middle' }, // Actions
-        { targets: [0,1,2,3], className: 'text-center align-middle' }
+        { targets: 5, orderable: false, className: 'text-center align-middle' }, // Actions
+        { targets: [0,1,2,3,4], className: 'text-center align-middle' }
       ],
       language: {
         emptyTable: 'No requisitions found.',
