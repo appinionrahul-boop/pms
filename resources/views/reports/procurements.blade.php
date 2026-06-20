@@ -82,14 +82,14 @@
           <tr>
             <th class="text-center">ERP Req. No.</th>
             <th class="text-center">Package No.</th>
-            <th class="text-center">Description</th>
+            <th class="text-start">Description</th>
             <th class="text-center">Procurement Method</th>
             <th class="text-center">Requisition Status</th>
             <th class="text-center">Name of Vendor</th>
             <th class="text-center">Department</th>
             <th class="text-center">Type of Procurement</th>
             <th class="text-center">LC Status</th>
-            <th class="text-center">Assigned Person</th>
+            <th class="text-start">Assigned Person</th>
             <th class="text-center">Unit</th>
             <th class="text-center">Estimated Cost (BDT)</th>
             <th class="text-center">Quantity/Nos.</th>
@@ -106,8 +106,8 @@
             <tr>
               <td class="text-center">{{ $r->erp_requisition_no ?? '—' }}</td>
               <td class="text-center">{{ $r->package_no }}</td>
-              <td class="text-center">
-                <div class="line-clamp-2 mx-auto" style="max-width: 460px;" title="{{ $r->description }}">
+              <td class="text-start">
+                <div class="line-clamp-2" style="max-width: 460px;" title="{{ $r->description }}">
                   {{ $r->description }}
                 </div>
               </td>
@@ -119,7 +119,7 @@
               <td class="text-center">{{ $r->department ?? '—' }}</td>
               <td class="text-center">{{ $r->procurement_type ?? '—' }}</td>
               <td class="text-center">{{ $r->lc_status ?? '—' }}</td>
-              <td class="text-center">{{ $r->officer_name ?? '—' }}</td>
+              <td class="text-start">{{ $r->officer_name ?? '—' }}</td>
               <td class="text-center">{{ $r->unit ?? '—' }}</td>
 
               {{-- INTEGER formatting for money/qty --}}
@@ -196,6 +196,8 @@
       searching:false,
       columnDefs: [
         { targets: '_all', className: 'align-middle' },
+        // Description & Assigned Person left-aligned
+        { targets: [2, 9], className: 'text-start align-middle' },
         // Make currency columns align right for readability
         { targets: [11, 15], className: 'text-end align-middle' }
       ],
