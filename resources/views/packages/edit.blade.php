@@ -28,14 +28,6 @@
             @method('PUT')
 
             <div class="row">
-              {{-- Package ID (readonly) --}}
-              <div class="col-md-4">
-                <div class="form-group">
-                  <label class="form-control-label">Package ID</label>
-                  <input type="text" class="form-control" value="{{ $package->package_id }}" readonly>
-                </div>
-              </div>
-
               {{-- Package No --}}
               <div class="col-md-4">
                 <div class="form-group">

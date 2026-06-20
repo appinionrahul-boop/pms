@@ -54,7 +54,6 @@
         <table id="packagesTable" class="table table-striped align-middle">
           <thead>
             <tr>
-              <th>Package ID</th>
               <th>Package No</th>
               <th>Description</th>
               <th>Procurement Method</th>
@@ -64,7 +63,6 @@
           <tbody>
             @forelse($packages as $p)
               <tr>
-                <td>{{ $p->package_id }}</td>
                 <td>{{ $p->package_no }}</td>
                 <td>{{ $p->description }}</td>
                 <td>{{ $p->procurement_method_name ?? '-' }}</td>
@@ -72,7 +70,7 @@
               </tr>
             @empty
               <tr>
-                <td colspan="5" class="text-center text-muted">No packages found.</td>
+                <td colspan="4" class="text-center text-muted">No packages found.</td>
               </tr>
             @endforelse
           </tbody>

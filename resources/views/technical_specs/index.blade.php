@@ -7,7 +7,7 @@
     <div class="card-header pb-0 d-flex justify-content-between align-items-center">
       <div>
         <h6 class="mb-0">Technical Specifications</h6>
-        <small class="text-muted">Search by Package ID/Package No/ERP Code/ Spec Name</small>
+        <small class="text-muted">Search by Package No/ERP Code/ Spec Name</small>
       </div>
       <div>
         <a href="{{ route('techspecs.create') }}" class="btn btn-sm bg-gradient-primary">
@@ -38,7 +38,7 @@
         <table class="table align-items-center mb-0" id="packagesTable" style="width:100%">
           <thead>
             <tr>
-              <th class="text-center">Package ID</th>
+              <th class="text-center">ERP Req. No.</th>
               <th class="text-center">Package No</th>
               <th style="width:20%;padding:0" class="spec-text">Description</th>
               <th class="text-center">ERP Code</th>
@@ -53,7 +53,7 @@
          <tbody>
             @foreach ($specs as $s)
               <tr>
-                <td class="text-center">{{ $s->package_id }}</td>
+                <td class="text-center">{{ $s->erp_requisition_no ?? '—' }}</td>
                 <td class="text-center">{{ $s->package_no }}</td>
                 <td class="align-middle desc-cell"><span class="desc-text">{{ $s->description }}</span></td>
                 <td class="text-center">{{ $s->erp_code }}</td>

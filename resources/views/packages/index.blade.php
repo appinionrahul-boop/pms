@@ -76,7 +76,6 @@
             <table class="table align-items-center mb-0">
               <thead>
                 <tr style="text-align: center;">
-                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Package ID</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Package No.</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Description</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Procurement Method</th>
@@ -87,7 +86,6 @@
               <tbody>
                 @forelse ($packages as $pkg)
                   <tr style="text-align: center;">
-                    <td><span class="text-sm">{{ $pkg->package_id }}</span></td>
                     <td><span class="text-sm fw-semibold">{{ $pkg->package_no }}</span></td>
                     <!--<td>-->
                     <!--  <span class="text-sm text-truncate d-inline-block" style="max-width: 320px;">-->
@@ -152,7 +150,7 @@
                   </tr>
                 @empty
                   <tr>
-                    <td colspan="6" class="text-center py-4 text-sm text-secondary">
+                    <td colspan="5" class="text-center py-4 text-sm text-secondary">
                       No packages found. Click <strong>Add New</strong> or use <strong>Bulk Upload</strong>.
                     </td>
                   </tr>

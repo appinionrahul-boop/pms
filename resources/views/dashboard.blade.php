@@ -219,15 +219,23 @@
           </tbody>
           @if(!empty($assignedPersonStats))
             <tfoot class="table-light fw-bold">
+              @php
+                $grandTotal = collect($assignedPersonStats)->sum('total');
+              @endphp
               <tr class="align-middle">
                 <td class="text-center">Grand Total</td>
                 @foreach($allStatuses as $st)
                   @php
                     $colTotal = collect($assignedPersonStats)->sum(fn($r) => $r['counts'][$st->id] ?? 0);
+                    $colPct   = $grandTotal > 0 ? round(($colTotal / $grandTotal) * 100, 1) : 0;
+                    $pctColor = $st->color ?: '#6c757d';
                   @endphp
-                  <td>{{ $colTotal }}</td>
+                  <td>
+                    <div>{{ $colTotal }}</div>
+                    <span class="badge rounded-pill" style="color:#fff;background-color:{{ $pctColor }};">{{ $colPct }}%</span>
+                  </td>
                 @endforeach
-                <td>{{ collect($assignedPersonStats)->sum('total') }}</td>
+                <td>{{ $grandTotal }}</td>
               </tr>
             </tfoot>
           @endif

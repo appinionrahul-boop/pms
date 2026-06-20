@@ -1,7 +1,7 @@
 <table border="1" cellspacing="0" cellpadding="5">
   <thead style="background:#f0f0f0; font-weight:bold;">
     <tr>
-      <th>Package ID</th>
+      <th>ERP Req. No.</th>
       <th>Package No.</th>
       <th>Description</th>
       <th>Procurement Method</th>
@@ -10,7 +10,7 @@
       <th>Department</th>
       <th>Type of Procurement</th>
       <th>LC Status</th>
-      <th>Assigned Officer</th>
+      <th>Assigned Person</th>
       <th>Unit</th>
       <th class="text-end">Estimated Cost (BDT)</th>
       <th>Quantity/Nos.</th>
@@ -27,7 +27,7 @@
   <tbody>
   @foreach($records as $r)
     <tr>
-      <td>{{ $r->package_id }}</td>
+      <td>{{ $r->erp_requisition_no ?? '' }}</td>
       <td>{{ $r->package_no }}</td>
       <td style="max-width:420px">{{ $r->description }}</td>
 

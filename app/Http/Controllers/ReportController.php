@@ -34,6 +34,7 @@ class ReportController extends Controller
             ->select([
                 // Left column in your image
                 'packages.package_id                as package_id',
+                'requisitions.erp_requisition_no    as erp_requisition_no',
                 'packages.package_no                as package_no',
                 'requisitions.description           as description',
                 'pm.name                            as procurement_method',

@@ -41,6 +41,7 @@ public function index(Request $request)
             'ts.quantity',
             'ts.unit_price_bdt',
             'ts.total_price_bdt',
+            DB::raw('(SELECT erp_requisition_no FROM requisitions WHERE requisitions.package_id = p.id ORDER BY id DESC LIMIT 1) as erp_requisition_no'),
         ])
         ->when($q !== '', function ($x) use ($q) {
             $needle = mb_strtolower(trim($q));

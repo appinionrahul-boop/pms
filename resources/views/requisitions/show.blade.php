@@ -83,6 +83,7 @@
               <th class="text-center" style="width:60px;">#</th>
               <th>Requisition Status</th>
               <th class="text-center">Execution Date</th>
+              <th class="text-center">%</th>
             </tr>
           </thead>
           <tbody>
@@ -95,12 +96,24 @@
                 'Contract Signed'      => 'signing_date',
                 'Delivered'            => 'delivery_date',
               ];
+              // Progress weight per status.
+              $statusPctMap = [
+                'Initiate'             => 20,
+                'Tender Opened'        => 40,
+                'Evaluation Completed' => 60,
+                'Contract Signed'      => 80,
+                'Delivered'            => 100,
+              ];
             @endphp
             @foreach($statuses as $i => $st)
               @php
                 $col      = $statusDateCols[$st->name] ?? null;
                 $execDate = $col ? $requisition->{$col} : null;
                 $isCurrent = ($st->id == $requisition->requisition_status_id);
+                $statusPct = $statusPctMap[$st->name] ?? 0;
+                $pctClass = $statusPct >= 100 ? 'bg-gradient-success'
+                          : ($statusPct >= 60 ? 'bg-gradient-info'
+                          : ($statusPct >= 40 ? 'bg-gradient-warning' : 'bg-gradient-secondary'));
               @endphp
               <tr class="{{ $isCurrent ? 'table-active fw-semibold' : '' }}">
                 <td class="text-center">{{ $i + 1 }}</td>
@@ -112,6 +125,9 @@
                 </td>
                 <td class="text-center">
                   {{ $execDate ? \Carbon\Carbon::parse($execDate)->format('Y-m-d') : '—' }}
+                </td>
+                <td class="text-center">
+                  <span class="badge {{ $pctClass }}">{{ $statusPct }}%</span>
                 </td>
               </tr>
             @endforeach

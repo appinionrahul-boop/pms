@@ -45,13 +45,12 @@ class PackagesExport implements FromQuery, WithHeadings, WithMapping, ShouldAuto
 
     public function headings(): array
     {
-        return ['Package ID', 'Package No', 'Description', 'Procurement Method', 'Estimated Cost (BDT)', 'Created'];
+        return ['Package No', 'Description', 'Procurement Method', 'Estimated Cost (BDT)', 'Created'];
     }
 
     public function map($row): array
     {
         return [
-            $row->package_id,
             $row->package_no,
             $row->description,
             $row->procurement_method_name ?? '-',

@@ -80,7 +80,7 @@
       <table id="packagesTable" class="table table-striped table-hover align-middle">
         <thead>
           <tr>
-            <th class="text-center">Package ID</th>
+            <th class="text-center">ERP Req. No.</th>
             <th class="text-center">Package No.</th>
             <th class="text-center">Description</th>
             <th class="text-center">Procurement Method</th>
@@ -89,7 +89,7 @@
             <th class="text-center">Department</th>
             <th class="text-center">Type of Procurement</th>
             <th class="text-center">LC Status</th>
-            <th class="text-center">Assigned Officer</th>
+            <th class="text-center">Assigned Person</th>
             <th class="text-center">Unit</th>
             <th class="text-center">Estimated Cost (BDT)</th>
             <th class="text-center">Quantity/Nos.</th>
@@ -104,7 +104,7 @@
         <tbody>
           @foreach($records as $r)
             <tr>
-              <td class="text-center">{{ $r->package_id }}</td>
+              <td class="text-center">{{ $r->erp_requisition_no ?? '—' }}</td>
               <td class="text-center">{{ $r->package_no }}</td>
               <td class="text-center">
                 <div class="line-clamp-2 mx-auto" style="max-width: 460px;" title="{{ $r->description }}">

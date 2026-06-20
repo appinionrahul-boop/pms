@@ -189,8 +189,33 @@ class DashboardController extends Controller
             }
         }
 
-        // Sort by total requisitions (desc)
-        uasort($assignedPersonStats, fn ($a, $b) => $b['total'] <=> $a['total']);
+        // Progress weight per status (Initiate 20% ... Delivered 100%)
+        $statusProgressByName = [
+            'Initiate'             => 20,
+            'Tender Opened'        => 40,
+            'Evaluation Completed' => 60,
+            'Contract Signed'      => 80,
+            'Delivered'            => 100,
+        ];
+        $statusProgressById = [];
+        foreach ($allStatuses as $st) {
+            $statusProgressById[$st->id] = $statusProgressByName[$st->name] ?? 0;
+        }
+
+        // Compute each person's weighted progress % (avg across their requisitions)
+        foreach ($assignedPersonStats as &$ps) {
+            $weighted = 0;
+            foreach ($ps['counts'] as $sid => $cnt) {
+                $weighted += $cnt * ($statusProgressById[$sid] ?? 0);
+            }
+            $ps['progress_pct'] = $ps['total'] > 0 ? round($weighted / $ps['total'], 1) : 0;
+        }
+        unset($ps);
+
+        // Sort by progress % (desc), then by total requisitions (desc)
+        uasort($assignedPersonStats, function ($a, $b) {
+            return [$b['progress_pct'], $b['total']] <=> [$a['progress_pct'], $a['total']];
+        });
         $assignedPersonStats = array_values($assignedPersonStats);
 
         //Requistion status wise

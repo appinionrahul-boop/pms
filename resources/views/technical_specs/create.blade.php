@@ -23,8 +23,8 @@
           <input type="hidden" name="package_id" value="{{ $package->id }}">
           <div class="row mb-3">
             <div class="col-md-6">
-              <label class="form-label">Package ID</label>
-              <input class="form-control" value="{{ $package->package_id }}" readonly>
+              <label class="form-label">ERP Req. No.</label>
+              <input class="form-control" value="{{ optional($package->requisitions()->latest('id')->first())->erp_requisition_no ?? '—' }}" readonly>
             </div>
             <div class="col-md-6">
               <label class="form-label">Package No</label>
@@ -37,7 +37,7 @@
             <select name="package_id" class="form-control" required>
               <option value="">-- Select Package --</option>
               @foreach($packages as $p)
-                <option value="{{ $p->id }}">{{ $p->package_no }} — {{ $p->package_id }}</option>
+                <option value="{{ $p->id }}">{{ $p->package_no }}</option>
               @endforeach
             </select>
           </div>

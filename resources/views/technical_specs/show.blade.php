@@ -11,7 +11,7 @@
       </div>
       <div>
         <h6 class="mb-0">Technical Specs for Package</h6>
-        <small>Package ID: <strong>{{ $package->package_id }}</strong> &nbsp; | &nbsp;
+        <small>ERP Req. No: <strong>{{ optional($package->requisitions()->latest('id')->first())->erp_requisition_no ?? '—' }}</strong> &nbsp; | &nbsp;
                Package No: <strong>{{ $package->package_no }}</strong></small>
       </div>
       <div>

@@ -28,18 +28,8 @@
             @csrf
 
             <div class="row">
-              {{-- Auto 6-digit Package ID (readonly) --}}
-              <div class="col-md-4">
-                <div class="form-group">
-                  <label class="form-control-label">Package ID (auto)</label>
-                  <input type="text"
-                         class="form-control @error('package_id') is-invalid @enderror"
-                         name="package_id"
-                         value="{{ old('package_id', $generatedId ?? '') }}"
-                         readonly>
-                  @error('package_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                </div>
-              </div>
+              {{-- Package ID auto-generated; hidden from UI but still submitted --}}
+              <input type="hidden" name="package_id" value="{{ old('package_id', $generatedId ?? '') }}">
 
               {{-- Unique Package No. --}}
               <div class="col-md-4">
