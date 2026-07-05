@@ -56,6 +56,14 @@
               <input type="text" name="q" value="{{ $search }}" class="form-control" placeholder="Search by Package No or Description">
             </div>
             <div class="col-md-2">
+              <select name="officer_id" class="form-control">
+                <option value="">All Officers</option>
+                @foreach($officers as $officer)
+                  <option value="{{ $officer->id }}" @selected(request('officer_id') == $officer->id)>{{ $officer->name }}</option>
+                @endforeach
+              </select>
+            </div>
+            <div class="col-md-2">
               <button class="btn btn-outline-secondary w-100" type="submit">
                 <i class="fas fa-search me-1"></i> Search
               </button>
@@ -73,13 +81,15 @@
         {{-- Table --}}
         <div class="card-body px-0 pt-0 pb-2">
           <div class="table-responsive p-0">
-            <table class="table align-items-center mb-0">
+            <table id="appPackagesTable" class="table align-items-center mb-0" style="width:100%">
               <thead>
                 <tr style="text-align: center;">
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Package No.</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Description</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Procurement Method</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-end">Estimated Costs (BDT)</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Assigned Officer</th>
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Fiscal Year</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ">Action</th>
                 </tr>
               </thead>
@@ -126,6 +136,12 @@
                     <td class="text-center">
                       <span class="text-sm">{{ number_format((float)($pkg->estimated_cost_bdt ?? 0), 2) }}</span>
                     </td>
+                    <td class="text-center">
+                      <span class="text-sm">{{ optional($pkg->assignedOfficer)->name ?? '—' }}</span>
+                    </td>
+                    <td class="text-center">
+                      <span class="text-sm">{{ $pkg->fiscal_year ?? '—' }}</span>
+                    </td>
                     <td class="text-end">
                         {{-- Add Requisition (prefill with package) --}}
                         <a href="{{ url('requisitions/create?package_id='.$pkg->id) }}"
@@ -150,7 +166,7 @@
                   </tr>
                 @empty
                   <tr>
-                    <td colspan="5" class="text-center py-4 text-sm text-secondary">
+                    <td colspan="7" class="text-center py-4 text-sm text-secondary">
                       No packages found. Click <strong>Add New</strong> or use <strong>Bulk Upload</strong>.
                     </td>
                   </tr>
@@ -177,6 +193,7 @@
     </div>
   </div>
 </div>
+
 @endsection
 
 <!-- Description Modal -->

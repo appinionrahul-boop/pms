@@ -9,6 +9,23 @@
         $unseenCount = \App\Models\Notificaton::where('is_seen', false)->count();
       @endphp
 
+        @if(request()->routeIs('dashboard'))
+          {{-- Fiscal Year filter (dashboard only) --}}
+          <li class="nav-item d-flex align-items-center me-3">
+            <form method="GET" action="{{ route('dashboard') }}" class="mb-0">
+              @if(request('start'))<input type="hidden" name="start" value="{{ request('start') }}">@endif
+              @if(request('end'))<input type="hidden" name="end" value="{{ request('end') }}">@endif
+              <select name="fiscal_year" class="form-select form-select-sm"
+                      onchange="this.form.submit()" aria-label="Fiscal Year">
+                <option value="">All Fiscal Years</option>
+                @foreach(\App\Http\Controllers\PackageController::fiscalYearOptions() as $fy)
+                  <option value="{{ $fy }}" @selected(request('fiscal_year') == $fy)>FY {{ $fy }}</option>
+                @endforeach
+              </select>
+            </form>
+          </li>
+        @endif
+
         <li class="nav-item d-flex align-items-center me-3">
             <a href="javascript:void(0)" id="btnNotifications"
               class="nav-link p-0 d-flex align-items-center" role="button" aria-label="Notifications">

@@ -57,6 +57,16 @@
         </select>
       </div>
 
+      <div class="col-md-6">
+        <label class="form-label">Assigned Person</label>
+        <select name="officer_name" class="form-select">
+          <option value="">All</option>
+          @foreach($officers as $officer)
+            <option value="{{ $officer }}" {{ request('officer_name')==$officer ? 'selected' : '' }}>{{ $officer }}</option>
+          @endforeach
+        </select>
+      </div>
+
       <div class="col-md-3">
         <label class="form-label">Date (Start)</label>
         <input type="date" name="date_start" class="form-control" value="{{ request('date_start') }}">
@@ -80,11 +90,11 @@
       <table id="packagesTable" class="table table-striped table-hover align-middle">
         <thead>
           <tr>
-            <th class="text-center">ERP Req. No.</th>
-            <th class="text-center">Package No.</th>
+            <th class="text-center" data-priority="2">ERP Req. No.</th>
+            <th class="text-center" data-priority="1">Package No.</th>
             <th class="text-start">Description</th>
             <th class="text-center">Procurement Method</th>
-            <th class="text-center">Requisition Status</th>
+            <th class="text-center" data-priority="2">Requisition Status</th>
             <th class="text-center">Name of Vendor</th>
             <th class="text-center">Department</th>
             <th class="text-center">Type of Procurement</th>
@@ -179,11 +189,7 @@
   </style>
 </div>
 
-{{-- jQuery + DataTables CDN --}}
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
-<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-
+{{-- jQuery + DataTables (with Responsive) are loaded globally in the layout --}}
 <script>
   // Avoid DataTables alert popups
   $.fn.dataTable.ext.errMode = 'none';

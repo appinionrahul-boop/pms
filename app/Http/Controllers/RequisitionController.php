@@ -300,10 +300,10 @@ class RequisitionController extends Controller
     ]);
 
     // per-page (defaults to 25). Clamp to safe values.
-    $perPage = (int) $request->input('per_page', 25);
-    $allowed = [10,25,50,100,200];
+    $perPage = (int) $request->input('per_page', 5);
+    $allowed = [5,10,25,50,100,200];
     if (!in_array($perPage, $allowed, true)) {
-        $perPage = 25;
+        $perPage = 5;
     }
 
     $q = Requisition::query()
@@ -347,10 +347,10 @@ class RequisitionController extends Controller
         'k','status_id','procurement_type_id','procurement_method_id','lc_status_id','date_from','date_to','officer_name',
     ]);
 
-    $perPage = (int) $request->input('per_page', 25);
-    $allowed = [10,25,50,100,200];
+    $perPage = (int) $request->input('per_page', 5);
+    $allowed = [5,10,25,50,100,200];
     if (!in_array($perPage, $allowed, true)) {
-        $perPage = 25;
+        $perPage = 5;
     }
 
     $q = Requisition::query()

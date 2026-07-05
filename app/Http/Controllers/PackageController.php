@@ -15,25 +15,47 @@ use App\Exports\PackagesSampleExport;
 class PackageController extends Controller
 {
     /**
+     * Fiscal year options: previous, current and next FY only. Bangladesh FY
+     * runs July–June, so the current FY starts this year from July onward,
+     * else last year.
+     */
+    public static function fiscalYearOptions(): array
+    {
+        $now = now();
+        $currentStart = $now->month >= 7 ? $now->year : $now->year - 1;
+
+        $options = [];
+        for ($y = $currentStart - 1; $y <= $currentStart + 1; $y++) {
+            $options[] = $y . '-' . substr((string) ($y + 1), -2);
+        }
+
+        return $options;
+    }
+
+    /**
      * Show list of packages (APP Management).
      */
     public function index(Request $request)
     {
-        $search = $request->string('q')->trim();
+        $search    = $request->string('q')->trim();
+        $officerId = $request->input('officer_id');
 
         $packages = \App\Models\Package::query()
-            ->with('method')
+            ->with(['method', 'assignedOfficer'])
             ->whereDoesntHave('requisitions')              // ← hides packages that already have a requisition
             ->when($search, fn($q)=> $q->where(function($qq) use($search){
                 $qq->where('package_no','like',"%$search%")
                 ->orWhere('description','like',"%$search%")
                 ->orWhere('package_id','like',"%$search%");
             }))
+            ->when($officerId, fn($q) => $q->where('assigned_officer_id', $officerId))
             ->orderByDesc('id')
-            ->paginate(10)
+            ->paginate(5)
             ->withQueryString();
 
-        return view('packages.index', compact('packages','search'));
+        $officers = \App\Models\Officer::orderBy('name')->get();
+
+        return view('packages.index', compact('packages','search','officers'));
     }
 
     /**
@@ -68,9 +90,11 @@ class PackageController extends Controller
             $generatedId = str_pad((string)random_int(0, 999999), 6, '0', STR_PAD_LEFT);
         } while (Package::where('package_id', $generatedId)->exists());
 
-        $methods = ProcurementMethod::orderBy('name')->get();
+        $methods  = ProcurementMethod::orderBy('name')->get();
+        $officers = \App\Models\Officer::orderBy('name')->get();
+        $fiscalYears = self::fiscalYearOptions();
 
-        return view('packages.create', compact('methods', 'generatedId'));
+        return view('packages.create', compact('methods', 'generatedId', 'officers', 'fiscalYears'));
     }
 
     public function store(Request $request)
@@ -81,6 +105,8 @@ class PackageController extends Controller
         'description'          => 'nullable|string|max:1000',
         'procurement_method_id'=> 'nullable|exists:procurement_methods,id',
         'estimated_cost_bdt'   => 'nullable|numeric|min:0',
+        'assigned_officer_id'  => 'nullable|exists:officers,id',
+        'fiscal_year'          => ['nullable', \Illuminate\Validation\Rule::in(self::fiscalYearOptions())],
     ]);
 
     \App\Models\Package::create($validated);
@@ -93,8 +119,14 @@ class PackageController extends Controller
 
     public function edit(Package $package)
     {
-        $methods = \App\Models\ProcurementMethod::orderBy('name')->get();
-        return view('packages.edit', compact('package', 'methods'));
+        $methods  = \App\Models\ProcurementMethod::orderBy('name')->get();
+        $officers = \App\Models\Officer::orderBy('name')->get();
+        $fiscalYears = self::fiscalYearOptions();
+        // keep an already-saved fiscal year selectable even once it leaves the 3-year window
+        if ($package->fiscal_year && !in_array($package->fiscal_year, $fiscalYears, true)) {
+            array_unshift($fiscalYears, $package->fiscal_year);
+        }
+        return view('packages.edit', compact('package', 'methods', 'officers', 'fiscalYears'));
     }
 
     public function update(Request $request, Package $package)
@@ -104,6 +136,11 @@ class PackageController extends Controller
             'description'           => 'nullable|string|max:1000',
             'procurement_method_id' => 'nullable|exists:procurement_methods,id',
             'estimated_cost_bdt'    => 'nullable|numeric|min:0',
+            'assigned_officer_id'   => 'nullable|exists:officers,id',
+            'fiscal_year'           => ['nullable', \Illuminate\Validation\Rule::in(array_merge(
+                self::fiscalYearOptions(),
+                $package->fiscal_year ? [$package->fiscal_year] : []
+            ))],
         ]);
 
         $package->update($validated);
@@ -122,18 +159,22 @@ class PackageController extends Controller
 
     public function all(Request $request)
     {
-        $start = $request->input('start');
-        $end   = $request->input('end');
+        $start     = $request->input('start');
+        $end       = $request->input('end');
+        $officerId = $request->input('officer_id');
 
         $q = \DB::table('packages as p')
             ->leftJoin('procurement_methods as m', 'm.id', '=', 'p.procurement_method_id')
+            ->leftJoin('officers as u', 'u.id', '=', 'p.assigned_officer_id')
             ->select([
                 'p.package_id',
                 'p.package_no',
                 'p.description',
                 'p.estimated_cost_bdt',
+                'p.fiscal_year',
                 'p.created_at',
                 'm.name as procurement_method_name',
+                'u.name as assigned_officer_name',
             ]);
 
         if ($start) {
@@ -142,19 +183,24 @@ class PackageController extends Controller
         if ($end) {
             $q->whereDate('p.created_at', '<=', $end);
         }
+        if ($officerId) {
+            $q->where('p.assigned_officer_id', $officerId);
+        }
 
         $packages = $q->orderByDesc('p.created_at')->get();
+        $officers = \App\Models\Officer::orderBy('name')->get();
 
-        return view('packages.all', compact('packages'));
+        return view('packages.all', compact('packages', 'officers'));
     }
     
      public function downloadExcel(Request $request)
     {
-        $start = $request->input('start');
-        $end   = $request->input('end');
+        $start     = $request->input('start');
+        $end       = $request->input('end');
+        $officerId = $request->input('officer_id');
 
         return Excel::download(
-            new PackagesExport($start, $end),
+            new PackagesExport($start, $end, $officerId),
             'packages_'.now()->format('Ymd_His').'.xlsx'
         );
     }

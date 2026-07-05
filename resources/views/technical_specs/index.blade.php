@@ -38,16 +38,16 @@
         <table class="table align-items-center mb-0" id="packagesTable" style="width:100%">
           <thead>
             <tr>
-              <th class="text-center">ERP Req. No.</th>
-              <th class="text-center">Package No</th>
+              <th class="text-center" data-priority="3">ERP Req. No.</th>
+              <th class="text-center" data-priority="1">Package No</th>
               <th style="width:20%;padding:0" class="spec-text">Description</th>
               <th class="text-center">ERP Code</th>
-              <th class="text-center">Item Name</th>
+              <th class="text-center" data-priority="2">Item Name</th>
               <th class="spec-text" style="padding:0">Specification</th>
               <th class="text-end">Quantity</th>
               <th class="text-end">Unit Price (BDT)</th>
               <th class="text-end">Total Price (BDT)</th>
-              <th class="text-center">Action</th>
+              <th class="text-center" data-priority="1">Action</th>
             </tr>
           </thead>
          <tbody>
@@ -82,7 +82,7 @@
       </div>
 
       <div class="mt-3 px-3">
-        {{-- no pagination since controller used ->get() --}}
+        {{ $specs->links() }}
       </div>
     </div>
   </div>
@@ -111,17 +111,13 @@
   }
 </style>
 
-{{-- jQuery + DataTables --}}
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
-<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-
+{{-- jQuery + DataTables (with Responsive) are loaded globally in the layout --}}
 <script>
   $(function () {
   $('#packagesTable').DataTable({
     order: [[1, 'asc']],
-    pageLength: 10,
-    lengthMenu: [10, 25, 50, 100],
+    paging: false,                    // server-side pagination (Laravel links below the table)
+    info: false,
     searching: false,                 // you use the top form
     columnDefs: [
       { targets: [5,6,7,8], className: 'text-end align-middle' },

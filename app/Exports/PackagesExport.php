@@ -14,22 +14,30 @@ class PackagesExport implements FromQuery, WithHeadings, WithMapping, ShouldAuto
 {
     use Exportable;
 
-    public function __construct(?string $start = null, ?string $end = null)
+    protected ?string $start;
+    protected ?string $end;
+    protected $officerId;
+
+    public function __construct(?string $start = null, ?string $end = null, $officerId = null)
     {
-        $this->start = $start;
-        $this->end   = $end;
+        $this->start     = $start;
+        $this->end       = $end;
+        $this->officerId = $officerId;
     }
 
     public function query()
     {
         $q = DB::table('packages as p')
             ->leftJoin('procurement_methods as m', 'm.id', '=', 'p.procurement_method_id')
+            ->leftJoin('officers as u', 'u.id', '=', 'p.assigned_officer_id')
             ->select([
                 'p.package_id',
                 'p.package_no',
                 'p.description',
                 'm.name as procurement_method_name',
                 'p.estimated_cost_bdt',
+                'u.name as assigned_officer_name',
+                'p.fiscal_year',
                 'p.created_at',
             ]);
 
@@ -39,13 +47,16 @@ class PackagesExport implements FromQuery, WithHeadings, WithMapping, ShouldAuto
         if ($this->end) {
             $q->whereDate('p.created_at', '<=', $this->end);
         }
+        if ($this->officerId) {
+            $q->where('p.assigned_officer_id', $this->officerId);
+        }
 
         return $q->orderByDesc('p.created_at');
     }
 
     public function headings(): array
     {
-        return ['Package No', 'Description', 'Procurement Method', 'Estimated Cost (BDT)', 'Created'];
+        return ['Package No', 'Description', 'Procurement Method', 'Estimated Cost (BDT)', 'Assigned Officer', 'Fiscal Year', 'Created'];
     }
 
     public function map($row): array
@@ -55,6 +66,8 @@ class PackagesExport implements FromQuery, WithHeadings, WithMapping, ShouldAuto
             $row->description,
             $row->procurement_method_name ?? '-',
             number_format((float)($row->estimated_cost_bdt ?? 0), 2, '.', ''),
+            $row->assigned_officer_name ?? '',
+            $row->fiscal_year ?? '',
             Carbon::parse($row->created_at)->format('Y-m-d'),
         ];
     }

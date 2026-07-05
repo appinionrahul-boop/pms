@@ -177,31 +177,71 @@
     <div class="card mb-4">
       <div class="card-header text-center">
         Assigned Person Wise Requisition Status
-        <small class="text-muted">(count &amp; % of person's total)</small>
+        <small class="text-muted">(count &amp; % of person's assigned APP)</small>
       </div>
-      <div class="card-body p-0 table-responsive">
-        <table class="table table-sm table-striped table-bordered align-middle mb-0 text-center">
+      <div class="card-body p-0">
+        <table class="table table-sm table-striped table-bordered align-middle mb-0 text-center person-status-table">
           <thead class="table-light">
             <tr class="align-middle">
-              <th class="text-center">Assigned Person</th>
+              <th class="text-start ps-3">Assigned Person</th>
+              <th>Assigned APP</th>
+              <th>Received APP</th>
               @foreach($allStatuses as $st)
                 <th style="color:{{ $st->color ?: '#6c757d' }};">{{ $st->name }}</th>
               @endforeach
-              <th>Total</th>
+              <th>Pending</th>
             </tr>
           </thead>
           <tbody class="align-middle">
             @forelse($assignedPersonStats as $row)
               <tr class="align-middle">
-                <td class="text-center fw-semibold">{{ $row['person'] }}</td>
+                @php
+                  $isOfficer   = $row['person'] !== 'Unassigned';
+                  $summaryUrl  = $isOfficer ? route('requisitions.summary', ['officer_name' => $row['person']]) : null;
+                  $packagesUrl = $row['officer_id'] ? route('packages.index', ['officer_id' => $row['officer_id']]) : null;
+                @endphp
+                <td class="text-start fw-semibold ps-3">{{ $row['person'] }}</td>
+                <td class="fw-bold">
+                  @if($packagesUrl)
+                    <a href="{{ $packagesUrl }}" class="d-block text-reset text-decoration-none cell-link"
+                       title="View {{ $row['person'] }}'s packages">
+                      <div>{{ $row['assigned_app'] }}</div>
+                      @if($row['assigned_app'] > 0)
+                        <span class="badge rounded-pill bg-dark text-white">100%</span>
+                      @endif
+                    </a>
+                  @else
+                    <div>{{ $row['assigned_app'] }}</div>
+                  @endif
+                </td>
+                <td>
+                  @if($summaryUrl)
+                    <a href="{{ $summaryUrl }}" class="d-block text-reset text-decoration-none cell-link"
+                       title="View {{ $row['person'] }}'s requisitions">
+                      <div class="fw-semibold">{{ $row['received_app'] }}</div>
+                      @if($row['received_app'] > 0)
+                        <span class="badge rounded-pill bg-primary text-white">{{ $row['received_pct'] }}%</span>
+                      @endif
+                    </a>
+                  @else
+                    <div class="fw-semibold">{{ $row['received_app'] }}</div>
+                  @endif
+                </td>
                 @foreach($allStatuses as $st)
                   @php
                     $cnt = $row['counts'][$st->id] ?? 0;
-                    $pct = $row['total'] > 0 ? round(($cnt / $row['total']) * 100, 1) : 0;
+                    $pct = $row['pct_base'] > 0 ? round(($cnt / $row['pct_base']) * 100, 1) : 0;
                     $pctColor = $st->color ?: '#6c757d';
+                    $statusUrl = $isOfficer ? route('requisitions.summary', ['officer_name' => $row['person'], 'status_id' => $st->id]) : null;
                   @endphp
                   <td>
-                    @if($cnt > 0)
+                    @if($cnt > 0 && $statusUrl)
+                      <a href="{{ $statusUrl }}" class="d-block text-reset text-decoration-none cell-link"
+                         title="View {{ $row['person'] }}'s {{ $st->name }} requisitions">
+                        <div class="fw-semibold">{{ $cnt }}</div>
+                        <span class="badge rounded-pill" style="color:#fff;background-color:{{ $pctColor }};">{{ $pct }}%</span>
+                      </a>
+                    @elseif($cnt > 0)
                       <div class="fw-semibold">{{ $cnt }}</div>
                       <span class="badge rounded-pill" style="color:#fff;background-color:{{ $pctColor }};">{{ $pct }}%</span>
                     @else
@@ -209,25 +249,52 @@
                     @endif
                   </td>
                 @endforeach
-                <td class="fw-bold">{{ $row['total'] }}</td>
+                <td class="fw-bold">
+                  @if($summaryUrl)
+                    <a href="{{ $summaryUrl }}" class="d-block text-reset text-decoration-none cell-link"
+                       title="View {{ $row['person'] }}'s requisitions">
+                      <div>{{ $row['pending'] }}</div>
+                      @if($row['pending'] > 0)
+                        <span class="badge rounded-pill bg-warning text-dark">{{ $row['pending_pct'] }}%</span>
+                      @endif
+                    </a>
+                  @else
+                    <div>{{ $row['pending'] }}</div>
+                  @endif
+                </td>
               </tr>
             @empty
               <tr class="align-middle">
-                <td colspan="{{ $allStatuses->count() + 2 }}" class="text-center text-muted">No data available.</td>
+                <td colspan="{{ $allStatuses->count() + 4 }}" class="text-center text-muted">No data available.</td>
               </tr>
             @endforelse
           </tbody>
           @if(!empty($assignedPersonStats))
             <tfoot class="table-light fw-bold">
               @php
-                $grandTotal = collect($assignedPersonStats)->sum('total');
+                $grandAssigned = collect($assignedPersonStats)->sum('assigned_app');
+                $grandReceived = collect($assignedPersonStats)->sum('received_app');
+                $grandPending  = collect($assignedPersonStats)->sum('pending');
+                $grandBase     = $grandAssigned > 0 ? $grandAssigned : $grandReceived;
               @endphp
               <tr class="align-middle">
-                <td class="text-center">Grand Total</td>
+                <td class="text-start ps-3">Grand Total</td>
+                <td>
+                  <div>{{ $grandAssigned }}</div>
+                  @if($grandAssigned > 0)
+                    <span class="badge rounded-pill bg-dark text-white">100%</span>
+                  @endif
+                </td>
+                <td>
+                  <div>{{ $grandReceived }}</div>
+                  @if($grandBase > 0)
+                    <span class="badge rounded-pill bg-primary text-white">{{ round($grandReceived / $grandBase * 100, 1) }}%</span>
+                  @endif
+                </td>
                 @foreach($allStatuses as $st)
                   @php
                     $colTotal = collect($assignedPersonStats)->sum(fn($r) => $r['counts'][$st->id] ?? 0);
-                    $colPct   = $grandTotal > 0 ? round(($colTotal / $grandTotal) * 100, 1) : 0;
+                    $colPct   = $grandBase > 0 ? round(($colTotal / $grandBase) * 100, 1) : 0;
                     $pctColor = $st->color ?: '#6c757d';
                   @endphp
                   <td>
@@ -235,7 +302,12 @@
                     <span class="badge rounded-pill" style="color:#fff;background-color:{{ $pctColor }};">{{ $colPct }}%</span>
                   </td>
                 @endforeach
-                <td>{{ $grandTotal }}</td>
+                <td>
+                  <div>{{ $grandPending }}</div>
+                  @if($grandBase > 0)
+                    <span class="badge rounded-pill bg-warning text-dark">{{ round($grandPending / $grandBase * 100, 1) }}%</span>
+                  @endif
+                </td>
               </tr>
             </tfoot>
           @endif
@@ -244,6 +316,22 @@
     </div>
   </div>
 </div>
+
+<style>
+  /* Fit the person-status table inside the card without horizontal scrolling */
+  .person-status-table { table-layout: fixed; width: 100%; }
+  .person-status-table th,
+  .person-status-table td {
+    white-space: normal;
+    overflow-wrap: break-word;
+    padding: .35rem .25rem;
+    font-size: .74rem;
+  }
+  .person-status-table th:first-child,
+  .person-status-table td:first-child { width: 13%; }
+  .person-status-table .badge { font-size: .62rem; padding: .3em .5em; }
+  .person-status-table a.cell-link:hover { background: rgba(13,110,253,.08); border-radius: .25rem; }
+</style>
 
 {{-- ===== Department & Procurement Type Wise Requisitions ===== --}}
 <div class="row justify-content-center">

@@ -41,6 +41,21 @@ class DashboardController extends Controller
             [$start, $end] = [optional($startDate)->toDateString(), optional($endDate)->toDateString()];
         }
 
+        // ---------------------------------------------
+        // Fiscal year filter (packages.fiscal_year; requisitions via package)
+        // ---------------------------------------------
+        $fiscalYear = $request->input('fiscal_year');
+        if ($fiscalYear && !in_array($fiscalYear, PackageController::fiscalYearOptions(), true)) {
+            $fiscalYear = null;
+        }
+        $fyPackageIds = $fiscalYear
+            ? Package::where('fiscal_year', $fiscalYear)->pluck('id')->all()
+            : [];
+
+        $withFiscalYear = function ($query) use ($fiscalYear, $fyPackageIds) {
+            return $fiscalYear ? $query->whereIn('package_id', $fyPackageIds) : $query;
+        };
+
         // Choose the date column to filter by (adjust if needed)
         $dateColumn = 'created_at';
 
@@ -59,21 +74,25 @@ class DashboardController extends Controller
         // ---------------------------------------------
         // KPIs
         // ---------------------------------------------
-        $packagesTotal = $withPeriod(Package::query())->count();
+        $packagesTotal = $withPeriod(
+            Package::query()->when($fiscalYear, fn ($q) => $q->where('fiscal_year', $fiscalYear))
+        )->count();
 
-        $requisitionsTotal = $withPeriod(Requisition::query())->count();
+        $requisitionsTotal = $withPeriod($withFiscalYear(Requisition::query()))->count();
 
-        $packagesWithoutReqTotal = Package::whereDoesntHave('requisitions')->count();
+        $packagesWithoutReqTotal = Package::whereDoesntHave('requisitions')
+            ->when($fiscalYear, fn ($q) => $q->where('fiscal_year', $fiscalYear))
+            ->count();
 
         // ---------------------------------------------
         // Named status cards
         // ---------------------------------------------
         $statusIds = RequisitionStatus::pluck('id', 'name');
 
-        $countByStatus = function (string $name) use ($statusIds, $withPeriod) {
+        $countByStatus = function (string $name) use ($statusIds, $withPeriod, $withFiscalYear) {
             $id = $statusIds[$name] ?? null;
             return $id
-                ? $withPeriod(Requisition::where('requisition_status_id', $id))->count()
+                ? $withPeriod($withFiscalYear(Requisition::where('requisition_status_id', $id)))->count()
                 : 0;
         };
 
@@ -92,7 +111,7 @@ class DashboardController extends Controller
         // ---------------------------------------------
         $statusCounts = RequisitionStatus::query()
             ->select('requisition_statuses.id', 'requisition_statuses.name', DB::raw('COUNT(r.id) AS total'))
-            ->leftJoin('requisitions as r', function ($join) use ($dateColumn, $startDate, $endDate) {
+            ->leftJoin('requisitions as r', function ($join) use ($dateColumn, $startDate, $endDate, $fiscalYear, $fyPackageIds) {
                 $join->on('r.requisition_status_id', '=', 'requisition_statuses.id');
                 if ($startDate && $endDate) {
                     $join->whereBetween("r.$dateColumn", [$startDate, $endDate]);
@@ -100,6 +119,9 @@ class DashboardController extends Controller
                     $join->where("r.$dateColumn", '>=', $startDate);
                 } elseif ($endDate) {
                     $join->where("r.$dateColumn", '<=', $endDate);
+                }
+                if ($fiscalYear) {
+                    $join->whereIn('r.package_id', $fyPackageIds);
                 }
             })
             ->groupBy('requisition_statuses.id', 'requisition_statuses.name')
@@ -111,7 +133,7 @@ class DashboardController extends Controller
         // ---------------------------------------------
         $departmentCounts = Department::query()
             ->select('departments.id', 'departments.name', DB::raw('COUNT(r.id) AS total'))
-            ->leftJoin('requisitions as r', function ($join) use ($dateColumn, $startDate, $endDate) {
+            ->leftJoin('requisitions as r', function ($join) use ($dateColumn, $startDate, $endDate, $fiscalYear, $fyPackageIds) {
                 $join->on('r.department_id', '=', 'departments.id');
                 if ($startDate && $endDate) {
                     $join->whereBetween("r.$dateColumn", [$startDate, $endDate]);
@@ -119,6 +141,9 @@ class DashboardController extends Controller
                     $join->where("r.$dateColumn", '>=', $startDate);
                 } elseif ($endDate) {
                     $join->where("r.$dateColumn", '<=', $endDate);
+                }
+                if ($fiscalYear) {
+                    $join->whereIn('r.package_id', $fyPackageIds);
                 }
             })
             ->groupBy('departments.id', 'departments.name')
@@ -130,7 +155,7 @@ class DashboardController extends Controller
         // ---------------------------------------------
         $typeCounts = ProcurementType::query()
             ->select('procurement_types.id', 'procurement_types.name', DB::raw('COUNT(r.id) AS total'))
-            ->leftJoin('requisitions as r', function ($join) use ($dateColumn, $startDate, $endDate) {
+            ->leftJoin('requisitions as r', function ($join) use ($dateColumn, $startDate, $endDate, $fiscalYear, $fyPackageIds) {
                 $join->on('r.procurement_type_id', '=', 'procurement_types.id');
                 if ($startDate && $endDate) {
                     $join->whereBetween("r.$dateColumn", [$startDate, $endDate]);
@@ -138,6 +163,9 @@ class DashboardController extends Controller
                     $join->where("r.$dateColumn", '>=', $startDate);
                 } elseif ($endDate) {
                     $join->where("r.$dateColumn", '<=', $endDate);
+                }
+                if ($fiscalYear) {
+                    $join->whereIn('r.package_id', $fyPackageIds);
                 }
             })
             ->groupBy('procurement_types.id', 'procurement_types.name')
@@ -160,10 +188,29 @@ class DashboardController extends Controller
         // ---------------------------------------------
         $allStatuses = RequisitionStatus::orderBy('id')->get(['id', 'name', 'color']);
 
-        $personStatusRows = $withPeriod(Requisition::query())
+        // Received APP = requisitions where this officer was selected as the
+        // assigned officer on the Add Requisition form (requisitions.officer_name).
+        $personStatusRows = $withPeriod($withFiscalYear(Requisition::query()))
             ->select('officer_name', 'requisition_status_id', DB::raw('COUNT(*) AS total'))
             ->groupBy('officer_name', 'requisition_status_id')
             ->get();
+
+        // Assigned APP (packages) per officer — respects the same FY/date filters
+        $officerNamesById = \App\Models\Officer::pluck('name', 'id');
+        $assignedAppByPerson = [];
+        $assignedAppRows = $withPeriod(
+                Package::query()->when($fiscalYear, fn ($q) => $q->where('fiscal_year', $fiscalYear))
+            )
+            ->whereNotNull('assigned_officer_id')
+            ->select('assigned_officer_id', DB::raw('COUNT(*) AS total'))
+            ->groupBy('assigned_officer_id')
+            ->get();
+        foreach ($assignedAppRows as $row) {
+            $name = trim((string) ($officerNamesById[$row->assigned_officer_id] ?? ''));
+            if ($name !== '') {
+                $assignedAppByPerson[$name] = (int) $row->total;
+            }
+        }
 
         $assignedPersonStats = [];
         foreach ($personStatusRows as $r) {
@@ -189,6 +236,35 @@ class DashboardController extends Controller
             }
         }
 
+        // Officers with assigned APPs but no requisitions yet still get a row
+        foreach ($assignedAppByPerson as $person => $assigned) {
+            if (!isset($assignedPersonStats[$person])) {
+                $assignedPersonStats[$person] = [
+                    'person' => $person,
+                    'counts' => [],
+                    'total'  => 0,
+                ];
+            }
+        }
+
+        // Assigned APP = 100% base; Received & Pending (and each status) are % of it.
+        // People with requisitions but no assigned APP fall back to their received total.
+        $officerIdsByName = $officerNamesById->flip();
+        foreach ($assignedPersonStats as &$ps) {
+            $assigned = $assignedAppByPerson[$ps['person']] ?? 0;
+            $received = $ps['total'];
+            $base     = $assigned > 0 ? $assigned : $received;
+
+            $ps['officer_id']   = $officerIdsByName[$ps['person']] ?? null;
+            $ps['assigned_app'] = $assigned;
+            $ps['received_app'] = $received;
+            $ps['pending']      = max(0, $assigned - $received);
+            $ps['pct_base']     = $base;
+            $ps['received_pct'] = $base > 0 ? round($received / $base * 100, 1) : 0;
+            $ps['pending_pct']  = $base > 0 ? round($ps['pending'] / $base * 100, 1) : 0;
+        }
+        unset($ps);
+
         // Progress weight per status (Initiate 20% ... Delivered 100%)
         $statusProgressByName = [
             'Initiate'             => 20,
@@ -212,9 +288,24 @@ class DashboardController extends Controller
         }
         unset($ps);
 
-        // Sort by progress % (desc), then by total requisitions (desc)
-        uasort($assignedPersonStats, function ($a, $b) {
-            return [$b['progress_pct'], $b['total']] <=> [$a['progress_pct'], $a['total']];
+        // Sort by who has the most: Initiate, then Tender Opened,
+        // then Evaluation Completed, then Contract Signed (desc), then total
+        $orderStatusIds = [];
+        foreach (['Initiate', 'Tender Opened', 'Evaluation Completed', 'Contract Signed'] as $name) {
+            if (isset($statusIds[$name])) {
+                $orderStatusIds[] = (int) $statusIds[$name];
+            }
+        }
+        uasort($assignedPersonStats, function ($a, $b) use ($orderStatusIds) {
+            $av = [];
+            $bv = [];
+            foreach ($orderStatusIds as $sid) {
+                $av[] = $a['counts'][$sid] ?? 0;
+                $bv[] = $b['counts'][$sid] ?? 0;
+            }
+            $av[] = $a['total'];
+            $bv[] = $b['total'];
+            return $bv <=> $av;
         });
         $assignedPersonStats = array_values($assignedPersonStats);
 
@@ -237,7 +328,7 @@ class DashboardController extends Controller
              'statusIds',
 
             // filters (strings for inputs/labels)
-            'start', 'end',
+            'start', 'end', 'fiscalYear',
 
             // KPIs
             'packagesTotal', 'requisitionsTotal', 'packagesWithoutReqTotal',

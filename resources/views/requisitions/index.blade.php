@@ -110,17 +110,17 @@
         <table id="packagesTable" class="table table-flush align-items-center mb-0" style="width:100%">
           <thead class="thead-light">
             <tr>
-              <th class="text-center">ERP Req. No.</th>
-              <th class="text-center">Package No</th>
+              <th class="text-center" data-priority="3">ERP Req. No.</th>
+              <th class="text-center" data-priority="1">Package No</th>
               <th class="text-start">Description</th>
               <th class="text-center">Procurement Method</th>
-              <th class="text-center">Requisition Status</th>
+              <th class="text-center" data-priority="2">Requisition Status</th>
               <th class="text-center">Name of Vendor</th>
               <th class="text-center">Department</th>
               <th class="text-center">Type of Procurement</th>
               <th class="text-center">Assigned Officer</th>
-              <th class="text-center">% Status</th>
-              <th class="text-center">Actions</th>
+              <th class="text-center" data-priority="3">% Status</th>
+              <th class="text-center" data-priority="1">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -252,7 +252,10 @@
         </div>
       @endforeach
 
-      {{-- No Laravel paginator here (DataTables handles paging) --}}
+      {{-- Server-side pagination --}}
+      <div class="mt-3">
+        {{ $requisitions->links() }}
+      </div>
 
     </div>
   </div>
@@ -260,7 +263,8 @@
     .line-clamp-2{
        width: 220px;  
       display: -webkit-box;
-      -webkit-line-clamp: 3;        /* limit to 2 lines */
+      -webkit-line-clamp: 2;        /* limit to 2 lines */
+      line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;              /* hide the rest */
       white-space: normal;           /* allow wrapping */
@@ -268,17 +272,13 @@
   </style>
 </div>
 
-{{-- jQuery + DataTables CDN --}}
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
-<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-
+{{-- jQuery + DataTables (with Responsive) are loaded globally in the layout --}}
 <script>
   $(function () {
     $('#packagesTable').DataTable({
       order: [[0, 'asc']],           // sort by Package No
-      pageLength: 10,
-      lengthMenu: [10, 25, 50, 100],
+      paging: false,                 // server-side pagination (Laravel links below the table)
+      info: false,
       searching: false,              // search bar hidden (you have server-side filters)
       columnDefs: [
         { targets: 10, orderable: false, className: 'text-center align-middle' }, // Actions column

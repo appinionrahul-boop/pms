@@ -99,6 +99,9 @@ class ProcurementReportExport implements FromView
         if (!empty($this->filters['lc_status_id'])) {
             $q->where('requisitions.lc_status_id', $this->filters['lc_status_id']);
         }
+        if (!empty($this->filters['officer_name'])) {
+            $q->where('requisitions.officer_name', $this->filters['officer_name']);
+        }
 
         $records = $q->get();
 

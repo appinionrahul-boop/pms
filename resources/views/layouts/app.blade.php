@@ -53,6 +53,52 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
+<!-- DataTables Responsive: collapse extra columns behind a +/- toggle instead of horizontal scroll -->
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+<script>
+  $.extend(true, $.fn.dataTable.defaults, { responsive: true, autoWidth: false });
+  // Responsive can't collapse columns while a .table-responsive wrapper still allows
+  // horizontal scrolling, so drop the wrapper before each table initialises.
+  $(document).on('preInit.dt', function (e, settings) {
+    $(settings.nTable).css('width', '100%').closest('.table-responsive').removeClass('table-responsive');
+  });
+</script>
+<style>
+  /* keep expanded child-row details readable */
+  table.dataTable > tbody > tr.child ul.dtr-details { width: 100%; }
+  table.dataTable > tbody > tr.child span.dtr-title { min-width: 160px; font-weight: 600; }
+
+  /* Classic green "+" / red "−" circle instead of the default chevron */
+  table.dataTable > tbody > tr > td.dtr-control::before,
+  table.dataTable > tbody > tr > th.dtr-control::before {
+    content: "+" !important;
+    display: inline-block !important;
+    box-sizing: content-box;
+    width: 15px !important;
+    height: 15px !important;
+    line-height: 15px !important;
+    margin-right: 8px;
+    border: 2px solid #fff !important;
+    border-radius: 50% !important;
+    background-color: #31b131 !important;
+    box-shadow: 0 0 3px #444;
+    color: #fff !important;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    text-indent: 0 !important;
+    vertical-align: middle;
+    cursor: pointer;
+  }
+  table.dataTable > tbody > tr.dt-hasChild > td.dtr-control::before,
+  table.dataTable > tbody > tr.dt-hasChild > th.dtr-control::before {
+    content: "-" !important;
+    background-color: #d33333 !important;
+  }
+</style>
+
 </head>
 
 <body class="g-sidenav-show  bg-gray-100 {{ (\Request::is('rtl') ? 'rtl' : (Request::is('virtual-reality') ? 'virtual-reality' : '')) }} ">

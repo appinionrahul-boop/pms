@@ -7,7 +7,7 @@
       <h6 class="mb-0">All Packages</h6>
       <div class="d-flex gap-2">
         <a href="{{ url()->previous() }}" class="btn btn-outline-secondary btn-sm">Back</a>
-        <a href="{{ route('packages.download.excel', request()->only('start','end')) }}" class="btn btn-success btn-sm">Download Excel</a>
+        <a href="{{ route('packages.download.excel', request()->only('start','end','officer_id')) }}" class="btn btn-success btn-sm">Download Excel</a>
       </div>
     </div>
 
@@ -25,11 +25,20 @@
           <input type="date" name="end" class="form-control"
                  value="{{ request('end') }}">
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-md-2" style="margin-bottom: 15px;">
+          <label class="form-label mb-1">Assigned Officer</label>
+          <select name="officer_id" class="form-control">
+            <option value="">All</option>
+            @foreach($officers as $officer)
+              <option value="{{ $officer->id }}" @selected(request('officer_id') == $officer->id)>{{ $officer->name }}</option>
+            @endforeach
+          </select>
+        </div>
+        <div class="col-6 col-md-2">
           <label class="form-label mb-1 invisible">Apply</label>
           <button class="btn btn-primary w-100">Apply</button>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md-2">
           <label class="form-label mb-1 invisible">Reset</label>
           <a href="{{ route('packages.all') }}" class="btn btn-outline-secondary w-100">Reset</a>
         </div>
@@ -58,6 +67,8 @@
               <th>Description</th>
               <th>Procurement Method</th>
               <th class="text-end">Estimated Cost (BDT)</th>
+              <th>Assigned Officer</th>
+              <th>Fiscal Year</th>
             </tr>
           </thead>
           <tbody>
@@ -67,10 +78,12 @@
                 <td>{{ $p->description }}</td>
                 <td>{{ $p->procurement_method_name ?? '-' }}</td>
                 <td class="text-end">{{ number_format((float)($p->estimated_cost_bdt ?? 0), 2) }}</td>
+                <td>{{ $p->assigned_officer_name ?? '-' }}</td>
+                <td>{{ $p->fiscal_year ?? '-' }}</td>
               </tr>
             @empty
               <tr>
-                <td colspan="4" class="text-center text-muted">No packages found.</td>
+                <td colspan="6" class="text-center text-muted">No packages found.</td>
               </tr>
             @endforelse
           </tbody>
@@ -84,11 +97,13 @@
 <script>
   $(function () {
     $('#packagesTable').DataTable({
+      responsive: false,  // show all columns; no +/- collapse
       searching: false,   // we filter via the form
       paging: true,
       ordering: true,
       info: true,
-      pageLength: 10,
+      pageLength: 5,
+      lengthMenu: [5, 10, 25, 50, 100],
       order: [[0, 'asc']],
       columnDefs: [
         { targets: '_all', className: 'align-middle' }

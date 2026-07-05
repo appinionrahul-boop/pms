@@ -21,11 +21,11 @@ public function index(Request $request)
 {
     $q = trim((string) $request->get('q', ''));
 
-    // per-page (defaults to 25). Clamp to safe values.
-    $perPage = (int) $request->input('per_page', 25);
-    $allowed = [10, 25, 50, 100, 200];
+    // per-page (defaults to 5). Clamp to safe values.
+    $perPage = (int) $request->input('per_page', 5);
+    $allowed = [5, 10, 25, 50, 100, 200];
     if (!in_array($perPage, $allowed, true)) {
-        $perPage = 25;
+        $perPage = 5;
     }
 
     $specs = DB::table('technical_specs as ts')
@@ -74,7 +74,7 @@ public function index(Request $request)
     // Details: all specs for a given package
     public function show(Package $package)
     {
-        $specs = TechnicalSpec::where('package_id', $package->id)->orderBy('id')->paginate(20);
+        $specs = TechnicalSpec::where('package_id', $package->id)->orderBy('id')->paginate(5);
         return view('technical_specs.show', compact('package','specs'));
     }
 

@@ -12,11 +12,18 @@ class Package extends Model
         'description',
         'procurement_method_id',
         'estimated_cost_bdt',
+        'assigned_officer_id',
+        'fiscal_year',
     ];
 
     public function method()
     {
         return $this->belongsTo(ProcurementMethod::class, 'procurement_method_id');
+    }
+
+    public function assignedOfficer()
+    {
+        return $this->belongsTo(Officer::class, 'assigned_officer_id');
     }
     // app/Models/Package.php
     public function requisitions()

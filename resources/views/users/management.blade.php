@@ -17,13 +17,13 @@
           <thead>
             <tr>
               <th>ID</th>
-              <th>Name</th>
-              <th>Email</th>
+              <th data-priority="1">Name</th>
+              <th data-priority="2">Email</th>
               <th>Phone</th>
               <th>Location</th>
               <th>Is Super</th>
               <th>About Me</th>
-              <th class="text-end">Actions</th>
+              <th class="text-end" data-priority="1">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -105,7 +105,8 @@
   $(function () {
     $('#usersTable').DataTable({
       order: [[0, 'asc']],
-      pageLength: 10,
+      pageLength: 5,
+      lengthMenu: [5, 10, 25, 50, 100],
       language: {
          searching: false, 
        

@@ -19,6 +19,12 @@ class ReportController extends Controller
         $procurementTypes = \DB::table('procurement_types')->orderBy('name')->pluck('name', 'id');
         $reqStatuses      = \DB::table('requisition_statuses')->orderBy('name')->pluck('name', 'id');
         $lcStatuses       = \DB::table('lc_statuses')->orderBy('name')->pluck('name', 'id');
+        $officers         = \DB::table('requisitions')
+            ->whereNotNull('officer_name')
+            ->where('officer_name', '<>', '')
+            ->distinct()
+            ->orderBy('officer_name')
+            ->pluck('officer_name');
 
         // Base query with all fields shown in the image
         $q = Requisition::query()
@@ -83,6 +89,9 @@ class ReportController extends Controller
         if ($req->filled('department_id')) {
             $q->where('requisitions.department_id', $req->department_id);
         }
+        if ($req->filled('officer_name')) {
+            $q->where('requisitions.officer_name', $req->officer_name);
+        }
 
         // Keyword search (Package No / Vendor / Description / Package ID)
         if ($req->filled('k')) {
@@ -105,11 +114,11 @@ class ReportController extends Controller
         }
 
         $records = $q->latest('requisitions.id')
-            ->paginate(25)
+            ->paginate(5)
             ->appends($req->query());
 
         return view('reports.procurements', compact(
-            'records', 'departments', 'procurementTypes', 'methods', 'reqStatuses', 'lcStatuses'
+            'records', 'departments', 'procurementTypes', 'methods', 'reqStatuses', 'lcStatuses', 'officers'
         ));
     }
 

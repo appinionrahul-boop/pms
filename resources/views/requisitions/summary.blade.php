@@ -112,6 +112,7 @@
             <tr>
               <th class="text-center">ERP Req. No.</th>
               <th class="text-start">Description</th>
+              <th class="text-center">Contract Amount</th>
               <th class="text-center">Requisition Status</th>
               <th class="text-center">Assigned Officer</th>
               <th class="text-center">% Status</th>
@@ -125,6 +126,9 @@
                   <div class="line-clamp-2" style="max-width: 460px;" title="{{ $r->description }}">
                     {{ $r->description ?? '—' }}
                   </div>
+                </td>
+                <td class="text-center" data-order="{{ $r->official_estimated_cost_bdt ?? 0 }}">
+                  {{ $r->official_estimated_cost_bdt !== null ? number_format((float)$r->official_estimated_cost_bdt, 2) : '—' }}
                 </td>
                 <td class="text-center">
                   <span class="badge bg-gradient-secondary" role="button" style="cursor:pointer;"
@@ -155,6 +159,11 @@
             @endforeach
           </tbody>
         </table>
+      </div>
+
+      {{-- Server-side pagination --}}
+      <div class="mt-3">
+        {{ $requisitions->links() }}
       </div>
 
       {{-- Status-wise Execution Dates modals (one per requisition) --}}
@@ -229,7 +238,8 @@
     .line-clamp-2{
        width: 220px;
       display: -webkit-box;
-      -webkit-line-clamp: 3;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
       white-space: normal;
@@ -237,21 +247,18 @@
   </style>
 </div>
 
-{{-- jQuery + DataTables CDN --}}
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
-<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
-
+{{-- jQuery + DataTables (with Responsive) are loaded globally in the layout --}}
 <script>
   $(function () {
     $('#summaryTable').DataTable({
+      responsive: false,              // no +/- column collapse on this table
       order: [[0, 'asc']],            // sort by ERP Req. No.
-      pageLength: 10,
-      lengthMenu: [10, 25, 50, 100],
+      paging: false,                  // server-side pagination (Laravel links below the table)
+      info: false,
       searching: false,               // server-side filters used instead
       columnDefs: [
         { targets: 1, className: 'text-start align-middle' },                     // Description left-aligned
-        { targets: [0,2,3,4], className: 'text-center align-middle' }
+        { targets: [0,2,3,4,5], className: 'text-center align-middle' }
       ],
       language: {
         emptyTable: 'No requisitions found.',

@@ -55,9 +55,42 @@
                   @error('procurement_method_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
               </div>
+
+              {{-- Assigned Officer --}}
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label class="form-control-label">Assigned Officer</label>
+                  <select name="assigned_officer_id"
+                          class="form-control @error('assigned_officer_id') is-invalid @enderror">
+                    <option value="">-- Select Officer --</option>
+                    @foreach($officers as $officer)
+                      <option value="{{ $officer->id }}"
+                        @selected(old('assigned_officer_id', $package->assigned_officer_id) == $officer->id)>
+                        {{ $officer->name }}
+                      </option>
+                    @endforeach
+                  </select>
+                  @error('assigned_officer_id') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+              </div>
             </div>
 
             <div class="row">
+              {{-- Fiscal Year --}}
+              <div class="col-md-4">
+                <div class="form-group">
+                  <label class="form-control-label">Fiscal Year</label>
+                  <select name="fiscal_year"
+                          class="form-control @error('fiscal_year') is-invalid @enderror">
+                    <option value="">-- Select Fiscal Year --</option>
+                    @foreach($fiscalYears as $fy)
+                      <option value="{{ $fy }}" @selected(old('fiscal_year', $package->fiscal_year) == $fy)>{{ $fy }}</option>
+                    @endforeach
+                  </select>
+                  @error('fiscal_year') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                </div>
+              </div>
+
               {{-- Estimated Cost --}}
               <div class="col-md-4">
                 <div class="form-group">
