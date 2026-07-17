@@ -3,6 +3,13 @@
 @section('content')
 
 <style>
+  /* keep option text clear of the dropdown caret */
+  select.form-control, select.form-select{
+    padding-right: 2.25rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .pkg-desc { text-align: left !important; }
   .pkg-desc-text{
     display: inline-block;
@@ -64,16 +71,22 @@
               </select>
             </div>
             <div class="col-md-2">
+              <select name="fiscal_year" class="form-control">
+                <option value="">All Fiscal Years</option>
+                @foreach($fiscalYears as $fy)
+                  <option value="{{ $fy }}" @selected(request('fiscal_year') === $fy)>{{ $fy }}</option>
+                @endforeach
+              </select>
+            </div>
+            <div class="col-md-2">
               <button class="btn btn-outline-secondary w-100" type="submit">
                 <i class="fas fa-search me-1"></i> Search
               </button>
             </div>
             <div class="col-md-2">
-             
+
                 <a href="{{ route('packages.index') }}" class="btn btn-outline-dark w-100">Reset</a>
-           
-            </div>
-            <div class="col-md-2">
+
             </div>
           </form>
         </div>

@@ -296,7 +296,7 @@ class RequisitionController extends Controller
     public function index(Request $request)
 {
     $filters = $request->only([
-        'k','status_id','procurement_type_id','procurement_method_id','lc_status_id','date_from','date_to','officer_name',
+        'k','status_id','procurement_type_id','procurement_method_id','lc_status_id','date_from','date_to','officer_name','fiscal_year',
     ]);
 
     // per-page (defaults to 25). Clamp to safe values.
@@ -322,6 +322,7 @@ class RequisitionController extends Controller
     if (!empty($filters['procurement_method_id'])) $q->where('procurement_method_id',  $filters['procurement_method_id']);
     if (!empty($filters['lc_status_id']))          $q->where('lc_status_id',           $filters['lc_status_id']);
     if (!empty($filters['officer_name']))          $q->where('officer_name',           $filters['officer_name']);
+    if (!empty($filters['fiscal_year']))           $q->whereHas('package', fn($p) => $p->where('fiscal_year', $filters['fiscal_year']));
     if (!empty($filters['date_from']))             $q->whereDate('created_at','>=',$filters['date_from']);
     if (!empty($filters['date_to']))               $q->whereDate('created_at','<=',$filters['date_to']);
 
@@ -337,6 +338,7 @@ class RequisitionController extends Controller
         'methods'      => ProcurementMethod::orderBy('name')->get(),
         'lcStatuses'   => LcStatus::orderBy('name')->get(),
         'officers'     => Officer::orderBy('name')->get(),
+        'fiscalYears'  => PackageController::fiscalYearFilterOptions(),
         'perPage'      => $perPage,
         'allowedPerPage' => $allowed,
     ]);
@@ -344,7 +346,7 @@ class RequisitionController extends Controller
    public function summary(Request $request)
 {
     $filters = $request->only([
-        'k','status_id','procurement_type_id','procurement_method_id','lc_status_id','date_from','date_to','officer_name',
+        'k','status_id','procurement_type_id','procurement_method_id','lc_status_id','date_from','date_to','officer_name','fiscal_year',
     ]);
 
     $perPage = (int) $request->input('per_page', 5);
@@ -370,6 +372,7 @@ class RequisitionController extends Controller
     if (!empty($filters['procurement_method_id'])) $q->where('procurement_method_id',  $filters['procurement_method_id']);
     if (!empty($filters['lc_status_id']))          $q->where('lc_status_id',           $filters['lc_status_id']);
     if (!empty($filters['officer_name']))          $q->where('officer_name',           $filters['officer_name']);
+    if (!empty($filters['fiscal_year']))           $q->whereHas('package', fn($p) => $p->where('fiscal_year', $filters['fiscal_year']));
     if (!empty($filters['date_from']))             $q->whereDate('created_at','>=',$filters['date_from']);
     if (!empty($filters['date_to']))               $q->whereDate('created_at','<=',$filters['date_to']);
 
@@ -385,6 +388,7 @@ class RequisitionController extends Controller
         'methods'      => ProcurementMethod::orderBy('name')->get(),
         'lcStatuses'   => LcStatus::orderBy('name')->get(),
         'officers'     => Officer::orderBy('name')->get(),
+        'fiscalYears'  => PackageController::fiscalYearFilterOptions(),
         'perPage'      => $perPage,
         'allowedPerPage' => $allowed,
     ]);

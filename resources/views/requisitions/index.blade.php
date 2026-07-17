@@ -2,6 +2,16 @@
 
 @section('content')
 
+<style>
+  /* keep option text clear of the dropdown caret */
+  select.form-control, select.form-select{
+    padding-right: 2.25rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
+
 <div class="container-fluid py-4">
   <div class="card">
     <div class="card-header pb-0 d-flex justify-content-between align-items-center">
@@ -73,6 +83,17 @@
               <option value="">All</option>
               @foreach($officers as $off)
                 <option value="{{ $off->name }}" @selected(($filters['officer_name'] ?? null) == $off->name)>{{ $off->name }}</option>
+              @endforeach
+            </select>
+          </div>
+
+          {{-- Fiscal Year --}}
+          <div class="col-md-2">
+            <label for="fiscal_year" class="form-label">Fiscal Year</label>
+            <select id="fiscal_year" name="fiscal_year" class="form-control">
+              <option value="">All</option>
+              @foreach($fiscalYears as $fy)
+                <option value="{{ $fy }}" @selected(($filters['fiscal_year'] ?? null) === $fy)>{{ $fy }}</option>
               @endforeach
             </select>
           </div>

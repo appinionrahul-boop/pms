@@ -17,12 +17,14 @@ class PackagesExport implements FromQuery, WithHeadings, WithMapping, ShouldAuto
     protected ?string $start;
     protected ?string $end;
     protected $officerId;
+    protected ?string $fiscalYear;
 
-    public function __construct(?string $start = null, ?string $end = null, $officerId = null)
+    public function __construct(?string $start = null, ?string $end = null, $officerId = null, ?string $fiscalYear = null)
     {
-        $this->start     = $start;
-        $this->end       = $end;
-        $this->officerId = $officerId;
+        $this->start      = $start;
+        $this->end        = $end;
+        $this->officerId  = $officerId;
+        $this->fiscalYear = $fiscalYear;
     }
 
     public function query()
@@ -49,6 +51,9 @@ class PackagesExport implements FromQuery, WithHeadings, WithMapping, ShouldAuto
         }
         if ($this->officerId) {
             $q->where('p.assigned_officer_id', $this->officerId);
+        }
+        if ($this->fiscalYear) {
+            $q->where('p.fiscal_year', $this->fiscalYear);
         }
 
         return $q->orderByDesc('p.created_at');

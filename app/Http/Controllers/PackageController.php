@@ -33,12 +33,31 @@ class PackageController extends Controller
     }
 
     /**
+     * Fiscal years offered in filter dropdowns: the 3-year window plus any
+     * value already saved on a package, newest first.
+     */
+    public static function fiscalYearFilterOptions(): array
+    {
+        $saved = Package::query()
+            ->whereNotNull('fiscal_year')
+            ->distinct()
+            ->pluck('fiscal_year')
+            ->all();
+
+        $options = array_unique(array_merge(self::fiscalYearOptions(), $saved));
+        rsort($options);
+
+        return array_values($options);
+    }
+
+    /**
      * Show list of packages (APP Management).
      */
     public function index(Request $request)
     {
-        $search    = $request->string('q')->trim();
-        $officerId = $request->input('officer_id');
+        $search     = $request->string('q')->trim();
+        $officerId  = $request->input('officer_id');
+        $fiscalYear = $request->input('fiscal_year');
 
         $packages = \App\Models\Package::query()
             ->with(['method', 'assignedOfficer'])
@@ -49,13 +68,15 @@ class PackageController extends Controller
                 ->orWhere('package_id','like',"%$search%");
             }))
             ->when($officerId, fn($q) => $q->where('assigned_officer_id', $officerId))
+            ->when($fiscalYear, fn($q) => $q->where('fiscal_year', $fiscalYear))
             ->orderByDesc('id')
             ->paginate(5)
             ->withQueryString();
 
-        $officers = \App\Models\Officer::orderBy('name')->get();
+        $officers    = \App\Models\Officer::orderBy('name')->get();
+        $fiscalYears = self::fiscalYearFilterOptions();
 
-        return view('packages.index', compact('packages','search','officers'));
+        return view('packages.index', compact('packages','search','officers','fiscalYears'));
     }
 
     /**
@@ -159,9 +180,10 @@ class PackageController extends Controller
 
     public function all(Request $request)
     {
-        $start     = $request->input('start');
-        $end       = $request->input('end');
-        $officerId = $request->input('officer_id');
+        $start      = $request->input('start');
+        $end        = $request->input('end');
+        $officerId  = $request->input('officer_id');
+        $fiscalYear = $request->input('fiscal_year');
 
         $q = \DB::table('packages as p')
             ->leftJoin('procurement_methods as m', 'm.id', '=', 'p.procurement_method_id')
@@ -186,21 +208,26 @@ class PackageController extends Controller
         if ($officerId) {
             $q->where('p.assigned_officer_id', $officerId);
         }
+        if ($fiscalYear) {
+            $q->where('p.fiscal_year', $fiscalYear);
+        }
 
-        $packages = $q->orderByDesc('p.created_at')->get();
-        $officers = \App\Models\Officer::orderBy('name')->get();
+        $packages    = $q->orderByDesc('p.created_at')->get();
+        $officers    = \App\Models\Officer::orderBy('name')->get();
+        $fiscalYears = self::fiscalYearFilterOptions();
 
-        return view('packages.all', compact('packages', 'officers'));
+        return view('packages.all', compact('packages', 'officers', 'fiscalYears'));
     }
-    
+
      public function downloadExcel(Request $request)
     {
-        $start     = $request->input('start');
-        $end       = $request->input('end');
-        $officerId = $request->input('officer_id');
+        $start      = $request->input('start');
+        $end        = $request->input('end');
+        $officerId  = $request->input('officer_id');
+        $fiscalYear = $request->input('fiscal_year');
 
         return Excel::download(
-            new PackagesExport($start, $end, $officerId),
+            new PackagesExport($start, $end, $officerId, $fiscalYear),
             'packages_'.now()->format('Ymd_His').'.xlsx'
         );
     }

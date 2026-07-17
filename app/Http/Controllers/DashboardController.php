@@ -44,8 +44,9 @@ class DashboardController extends Controller
         // ---------------------------------------------
         // Fiscal year filter (packages.fiscal_year; requisitions via package)
         // ---------------------------------------------
-        $fiscalYear = $request->input('fiscal_year');
-        if ($fiscalYear && !in_array($fiscalYear, PackageController::fiscalYearOptions(), true)) {
+        $fiscalYear  = $request->input('fiscal_year');
+        $fiscalYears = PackageController::fiscalYearFilterOptions();
+        if ($fiscalYear && !in_array($fiscalYear, $fiscalYears, true)) {
             $fiscalYear = null;
         }
         $fyPackageIds = $fiscalYear
@@ -328,7 +329,7 @@ class DashboardController extends Controller
              'statusIds',
 
             // filters (strings for inputs/labels)
-            'start', 'end', 'fiscalYear',
+            'start', 'end', 'fiscalYear', 'fiscalYears',
 
             // KPIs
             'packagesTotal', 'requisitionsTotal', 'packagesWithoutReqTotal',

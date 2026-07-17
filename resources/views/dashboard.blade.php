@@ -4,16 +4,18 @@
 @php
   $selStart = $start ?? null;
   $selEnd   = $end ?? null;
+  $selFy    = $fiscalYear ?? null;
 
-  // pass date range to any link that should respect the dashboard filter
+  // pass date range + fiscal year to any link that should respect the dashboard filter
   $range = [
-    'date_from' => $selStart,
-    'date_to'   => $selEnd,
+    'date_from'   => $selStart,
+    'date_to'     => $selEnd,
+    'fiscal_year' => $selFy,
   ];
-  $pkgRange = ['start' => $selStart, 'end' => $selEnd];
+  $pkgRange = ['start' => $selStart, 'end' => $selEnd, 'fiscal_year' => $selFy];
 @endphp
 
-{{-- ===== Filters: Start Date & End Date ===== --}}
+{{-- ===== Filters: Start Date, End Date & Fiscal Year ===== --}}
 <form method="GET" action="{{ route('dashboard') }}" class="mb-4">
   <div class="row gx-2 gy-2 align-items-end">
 
@@ -31,14 +33,25 @@
              value="{{ $selEnd }}">
     </div>
 
+    {{-- Fiscal Year --}}
+    <div class="col-12 col-md-2">
+      <label class="form-label mb-1">Fiscal Year</label>
+      <select name="fiscal_year" class="form-select control-eq">
+        <option value="">All</option>
+        @foreach(($fiscalYears ?? []) as $fy)
+          <option value="{{ $fy }}" @selected($selFy === $fy)>{{ $fy }}</option>
+        @endforeach
+      </select>
+    </div>
+
     {{-- Apply --}}
-    <div class="col-6 col-md-3" style="margin-bottom:-14px">
+    <div class="col-6 col-md-2" style="margin-bottom:-14px">
       <label class="form-label mb-1 invisible">Apply</label>
       <button type="submit" class="btn btn-primary w-100 control-eq d-flex justify-content-center">APPLY</button>
     </div>
 
     {{-- Reset --}}
-    <div class="col-6 col-md-3" style="margin-bottom:-14px">
+    <div class="col-6 col-md-2" style="margin-bottom:-14px">
       <label class="form-label mb-1 invisible">Reset</label>
       <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary w-100 control-eq d-flex justify-content-center">RESET</a>
     </div>
@@ -60,6 +73,9 @@
   @elseif (!empty($selEnd))
     until <strong>{{ \Carbon\Carbon::parse($selEnd)->format('d M Y') }}</strong>
   @endif
+  @if (!empty($selFy))
+    &middot; Fiscal Year <strong>{{ $selFy }}</strong>
+  @endif
 </p>
 
 {{-- Equalize control heights --}}
@@ -71,6 +87,13 @@
   .control-eq.form-select, .control-eq.form-control{
     padding-top: .65rem;
     padding-bottom: .65rem;
+  }
+  /* keep option text clear of the dropdown caret */
+  select.form-select, select.form-control{
+    padding-right: 2.25rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 </style>
 
@@ -105,8 +128,8 @@
   </div>
   <div class="col-md-4">
     <div class="card p-3">
-      {{-- packages.index doesn’t support date filtering; keep link as-is --}}
-      <a href="{{ route('packages.index') }}" class="stretched-link"></a>
+      {{-- packages.index doesn’t support date filtering; pass fiscal year only --}}
+      <a href="{{ route('packages.index', array_filter(['fiscal_year' => $selFy])) }}" class="stretched-link"></a>
       <div class="text-muted text-center">Packages w/o Requisition</div>
       <div class="h4 m-0 text-center">{{ $packagesWithoutReqTotal }}</div>
     </div>
@@ -197,8 +220,9 @@
               <tr class="align-middle">
                 @php
                   $isOfficer   = $row['person'] !== 'Unassigned';
-                  $summaryUrl  = $isOfficer ? route('requisitions.summary', ['officer_name' => $row['person']]) : null;
-                  $packagesUrl = $row['officer_id'] ? route('packages.index', ['officer_id' => $row['officer_id']]) : null;
+                  $fyParam     = array_filter(['fiscal_year' => $selFy]);
+                  $summaryUrl  = $isOfficer ? route('requisitions.summary', array_merge(['officer_name' => $row['person']], $fyParam)) : null;
+                  $packagesUrl = $row['officer_id'] ? route('packages.index', array_merge(['officer_id' => $row['officer_id']], $fyParam)) : null;
                 @endphp
                 <td class="text-start fw-semibold ps-3">{{ $row['person'] }}</td>
                 <td class="fw-bold">
@@ -232,7 +256,7 @@
                     $cnt = $row['counts'][$st->id] ?? 0;
                     $pct = $row['pct_base'] > 0 ? round(($cnt / $row['pct_base']) * 100, 1) : 0;
                     $pctColor = $st->color ?: '#6c757d';
-                    $statusUrl = $isOfficer ? route('requisitions.summary', ['officer_name' => $row['person'], 'status_id' => $st->id]) : null;
+                    $statusUrl = $isOfficer ? route('requisitions.summary', array_merge(['officer_name' => $row['person'], 'status_id' => $st->id], $fyParam)) : null;
                   @endphp
                   <td>
                     @if($cnt > 0 && $statusUrl)
