@@ -123,7 +123,11 @@
               </td>
               <td class="text-center">{{ $r->procurement_method ?? '—' }}</td>
               <td class="text-center">
-                <span class="badge bg-secondary">{{ $r->requisition_status ?? '—' }}</span>
+                <span class="badge bg-gradient-secondary" role="button" style="cursor:pointer;"
+                      data-bs-toggle="modal" data-bs-target="#execModal{{ $r->id }}"
+                      title="View status-wise execution dates">
+                  {{ $r->requisition_status ?? '—' }} <span class="ms-1" style="font-size:.85em;">&#128065;</span>
+                </span>
               </td>
               <td class="text-center">{{ $r->vendor_name ?? '—' }}</td>
               <td class="text-center">{{ $r->department ?? '—' }}</td>
@@ -177,6 +181,72 @@
       {{ $records->links() }}
     </div>
   </div>
+
+  {{-- Status-wise Execution Dates modals (one per record) --}}
+  @foreach($records as $r)
+    @php
+      $execStatuses = [
+        ['name' => 'Initiate',             'col' => 'initiate_date',             'pct' => 20],
+        ['name' => 'Tender Opened',        'col' => 'tender_opened_date',        'pct' => 40],
+        ['name' => 'Evaluation Completed', 'col' => 'evaluation_completed_date', 'pct' => 60],
+        ['name' => 'Contract Signed',      'col' => 'signing_date',              'pct' => 80],
+        ['name' => 'Delivered',            'col' => 'delivery_date',             'pct' => 100],
+      ];
+      $curName = $r->requisition_status ?? null;
+    @endphp
+    <div class="modal fade" id="execModal{{ $r->id }}" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h6 class="modal-title mb-0">
+              Status-wise Execution Dates
+              <small class="text-muted">— {{ $r->erp_requisition_no ?: ('Req #'.$r->id) }}</small>
+            </h6>
+            <button type="button" class="btn btn-link text-dark p-0 border-0 fw-bold"
+                    data-bs-dismiss="modal" aria-label="Close"
+                    style="font-size:1.5rem; line-height:1; cursor:pointer; text-decoration:none;">
+              &times;
+            </button>
+          </div>
+          <div class="modal-body">
+            <table class="table table-bordered align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="text-center" style="width:60px;">#</th>
+                  <th>Requisition Status</th>
+                  <th class="text-center">Execution Date</th>
+                  <th class="text-center">%</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach($execStatuses as $i => $st)
+                  @php
+                    $execDate  = $r->{$st['col']} ?? null;
+                    $isCurrent = ($curName === $st['name']);
+                    $p  = $st['pct'];
+                    $pc = $p >= 100 ? 'bg-gradient-success'
+                        : ($p >= 60 ? 'bg-gradient-info'
+                        : ($p >= 40 ? 'bg-gradient-warning' : 'bg-gradient-secondary'));
+                  @endphp
+                  <tr class="{{ $isCurrent ? 'table-active fw-semibold' : '' }}">
+                    <td class="text-center">{{ $i + 1 }}</td>
+                    <td>
+                      {{ $st['name'] }}
+                      @if($isCurrent)<span class="badge bg-gradient-primary ms-1">Current</span>@endif
+                    </td>
+                    <td class="text-center">
+                      {{ $execDate ? \Carbon\Carbon::parse($execDate)->format('Y-m-d') : '—' }}
+                    </td>
+                    <td class="text-center"><span class="badge {{ $pc }}">{{ $p }}%</span></td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  @endforeach
   <style>
     .line-clamp-2{
        width: 220px;  

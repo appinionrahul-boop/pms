@@ -65,6 +65,9 @@ class ReportController extends Controller
                 'requisitions.tech_spec_file        as tech_spec_file',
                 'aa.name                            as approving_authority',
                 'requisitions.signing_date          as signing_date',
+                'requisitions.initiate_date         as initiate_date',
+                'requisitions.tender_opened_date    as tender_opened_date',
+                'requisitions.evaluation_completed_date as evaluation_completed_date',
                 'lc.name                            as lc_status',
                 'requisitions.reference_annex       as reference_annex',
 
