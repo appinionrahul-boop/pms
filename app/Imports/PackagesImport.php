@@ -42,7 +42,7 @@ class PackagesImport implements ToModel, WithHeadingRow, SkipsEmptyRows, WithVal
             'estimated_cost_bdt'    => isset($row['estimated_cost_bdt']) && is_numeric($row['estimated_cost_bdt'])
                                         ? (float) $row['estimated_cost_bdt'] : null,
             'assigned_officer_id'   => $this->resolveOfficerId($row['assigned_officer'] ?? null),
-            'fiscal_year'           => $this->normalizeFiscalYear($row['fiscal_year'] ?? null),
+            'fiscal_year'           => self::normalizeFiscalYear($row['fiscal_year'] ?? null),
         ]);
     }
 
@@ -51,7 +51,7 @@ class PackagesImport implements ToModel, WithHeadingRow, SkipsEmptyRows, WithVal
      * "FY 2025-26", "25-26" or a bare "2025" — and normalize to "2025-26".
      * Returns null when the value is missing or unrecognizable.
      */
-    protected function normalizeFiscalYear($raw): ?string
+    public static function normalizeFiscalYear($raw): ?string
     {
         $value = strtolower(trim((string) ($raw ?? '')));
         if ($value === '') {
@@ -142,9 +142,9 @@ class PackagesImport implements ToModel, WithHeadingRow, SkipsEmptyRows, WithVal
     public function customValidationMessages()
     {
         return [
-            '*.package_no.required' => 'package_no is required.',
-            '*.package_no.unique'   => 'package_no must be unique.',
-            '*.package_no.distinct' => 'Duplicate package_no in the sheet.',
+            '*.package_no.required' => 'Package Number is required.',
+            '*.package_no.unique'   => 'Package Number already exists.',
+            '*.package_no.distinct' => 'Package Number already exists — it is repeated in the file.',
         ];
     }
 }

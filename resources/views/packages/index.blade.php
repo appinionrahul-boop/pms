@@ -28,6 +28,38 @@
   <div class="row">
     <div class="col-12">
 
+      {{-- Flash messages --}}
+      @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          {{ session('success') }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      @endif
+
+      @if(session('warnings'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+          <strong>Imported, but check these:</strong>
+          <ul class="mb-0 mt-2 ps-3">
+            @foreach(session('warnings') as $warning)
+              <li class="text-sm">{{ $warning }}</li>
+            @endforeach
+          </ul>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      @endif
+
+      @if($errors->any())
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          <strong>Bulk upload failed — nothing was imported.</strong>
+          <ul class="mb-0 mt-2 ps-3">
+            @foreach($errors->all() as $error)
+              <li class="text-sm">{{ $error }}</li>
+            @endforeach
+          </ul>
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      @endif
+
       <div class="card mb-4">
         <div class="card-header pb-0 d-flex align-items-center justify-content-between">
           <div>
@@ -194,14 +226,6 @@
           </div>
         </div>
       </div>
-
-      {{-- Flash messages --}}
-      @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-          {{ session('success') }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-      @endif
 
     </div>
   </div>
