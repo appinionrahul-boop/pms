@@ -115,7 +115,7 @@
 <script>
   $(function () {
   $('#packagesTable').DataTable({
-    order: [[1, 'asc']],
+    order: [],   // keep the server order (newest created first)
     paging: false,                    // server-side pagination (Laravel links below the table)
     info: false,
     searching: false,                 // you use the top form

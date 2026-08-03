@@ -56,7 +56,8 @@ public function index(Request $request)
                   ->orWhereRaw('LOWER(ts.spec_name) REGEXP ?', ["[[:<:]]{$needle}[[:>:]]"]);
             });
         })
-        ->orderByDesc('p.id')
+        ->orderByDesc('ts.created_at')   // newest first
+        ->orderByDesc('ts.id')
         ->paginate($perPage)
         ->withQueryString(); // keep q & per_page in links
 

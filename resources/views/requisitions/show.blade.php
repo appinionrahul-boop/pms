@@ -41,6 +41,7 @@
         <div class="col-md-3"><strong>Unit:</strong> {{ $requisition->unit->name ?? '—' }}</div>
         <div class="col-md-3"><strong>Estimated Cost:</strong> {{ number_format((float)($requisition->estimated_cost_bdt ?? 0), 2) }}</div>
         <div class="col-md-3"><strong>Official Est. Cost:</strong> {{ number_format((float)($requisition->official_estimated_cost_bdt ?? 0), 2) }}</div>
+        <div class="col-md-3"><strong>Contract Amount:</strong> {{ $requisition->contract_amount !== null ? number_format((float)$requisition->contract_amount, 2) : '—' }}</div>
       </div>
 
       <div class="row mb-2">

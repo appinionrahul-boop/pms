@@ -202,6 +202,23 @@
         <span class="nav-link-text ms-1">User Management</span>
       </a>
     </li>
+    {{-- Assigned Officer Management --}}
+    <li class="nav-item">
+      <a class="nav-link {{ Request::is('officers') || Request::is('officers/*') ? 'active' : '' }}" href="{{ route('officers.index') }}">
+        <div class="icon icon-shape icon-sm shadow border-radius-md bg-white text-center me-2 d-flex align-items-center justify-content-center">
+          {{-- Inline SVG (id badge icon) --}}
+          <svg width="12px" height="12px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <g fill="none" fill-rule="evenodd">
+              <path d="M20 6h-4V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2H4a2 2 0 00-2 2v11a2 2 0
+              002 2h16a2 2 0 002-2V8a2 2 0 00-2-2zM10 4h4v2h-4V4zm2 6a2.5 2.5 0 110 5 2.5 2.5 0
+              010-5zm4.5 9h-9v-.75c0-1.5 3-2.25 4.5-2.25s4.5.75 4.5 2.25V19z"
+              fill="#FFFFFF" class="color-background"></path>
+            </g>
+          </svg>
+        </div>
+        <span class="nav-link-text ms-1">Assigned Officers</span>
+      </a>
+    </li>
   @endif
 @endauth
     </ul>

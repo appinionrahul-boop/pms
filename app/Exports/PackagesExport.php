@@ -56,7 +56,7 @@ class PackagesExport implements FromQuery, WithHeadings, WithMapping, ShouldAuto
             $q->where('p.fiscal_year', $this->fiscalYear);
         }
 
-        return $q->orderByDesc('p.created_at');
+        return $q->orderByDesc('p.created_at')->orderByDesc('p.id');   // newest first
     }
 
     public function headings(): array
@@ -71,7 +71,7 @@ class PackagesExport implements FromQuery, WithHeadings, WithMapping, ShouldAuto
             $row->description,
             $row->procurement_method_name ?? '-',
             number_format((float)($row->estimated_cost_bdt ?? 0), 2, '.', ''),
-            $row->assigned_officer_name ?? '',
+            $row->assigned_officer_name ?: 'Unassigned',
             $row->fiscal_year ?? '',
             Carbon::parse($row->created_at)->format('Y-m-d'),
         ];

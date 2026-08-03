@@ -182,7 +182,7 @@
                       <span class="text-sm">{{ number_format((float)($pkg->estimated_cost_bdt ?? 0), 2) }}</span>
                     </td>
                     <td class="text-center">
-                      <span class="text-sm">{{ optional($pkg->assignedOfficer)->name ?? '—' }}</span>
+                      <span class="text-sm">{{ optional($pkg->assignedOfficer)->name ?: 'Unassigned' }}</span>
                     </td>
                     <td class="text-center">
                       <span class="text-sm">{{ $pkg->fiscal_year ?? '—' }}</span>

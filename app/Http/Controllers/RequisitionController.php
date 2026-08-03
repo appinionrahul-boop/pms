@@ -31,6 +31,9 @@ class RequisitionController extends Controller
             $package = Package::findOrFail($request->package_id);
         }
 
+        // The Assigned Officer Name field defaults to the package's assigned person.
+        $package?->loadMissing('assignedOfficer');
+
         $data = [
             'package'     => $package,
             'methods'     => ProcurementMethod::orderBy('name')->get(),
@@ -40,8 +43,8 @@ class RequisitionController extends Controller
             'statuses'    => RequisitionStatus::orderBy('name')->get(),
             'authorities' => ApprovingAuthority::orderBy('name')->get(),
             'lcStatuses'  => LcStatus::orderBy('name')->get(),
-            // NEW: officers for dropdown
-            'officers'    => Officer::orderBy('name')->get(),
+            // NEW: officers for dropdown — inactive officers are not offered
+            'officers'    => Officer::assignable(),
         ];
 
         return view('requisitions.create', $data);
@@ -60,6 +63,7 @@ class RequisitionController extends Controller
             'vendor_name'                 => ['nullable','string','max:255'],
             'procurement_type_id'         => ['nullable','exists:procurement_types,id'],
             'official_estimated_cost_bdt' => ['nullable','numeric','min:0'],
+            'contract_amount'             => ['nullable','numeric','min:0'],
             'estimated_cost_bdt'          => ['nullable','numeric','min:0'],
             'requisition_receiving_date'  => ['nullable','date'],
             'delivery_date'               => ['nullable','date'],
@@ -95,6 +99,7 @@ class RequisitionController extends Controller
             'vendor_name'                 => $request->vendor_name,
             'procurement_type_id'         => $request->procurement_type_id,
             'official_estimated_cost_bdt' => $request->official_estimated_cost_bdt,
+            'contract_amount'             => $request->contract_amount,
             'estimated_cost_bdt'          => $request->estimated_cost_bdt,
             'requisition_receiving_date'  => $request->requisition_receiving_date,
             'delivery_date'               => $request->delivery_date,
@@ -185,8 +190,8 @@ class RequisitionController extends Controller
             'statuses'     => RequisitionStatus::orderBy('name')->get(),
             'authorities'  => ApprovingAuthority::orderBy('name')->get(),
             'lcStatuses'   => LcStatus::orderBy('name')->get(),
-            // NEW: officers for dropdown
-            'officers'     => Officer::orderBy('name')->get(),
+            // active officers, plus whoever is already assigned so an edit does not clear them
+            'officers'     => Officer::assignableByName($requisition->officer_name),
         ];
 
         return view('requisitions.edit', $data);
@@ -203,6 +208,7 @@ class RequisitionController extends Controller
             'vendor_name'                 => ['nullable','string','max:255'],
             'procurement_type_id'         => ['nullable','exists:procurement_types,id'],
             'official_estimated_cost_bdt' => ['nullable','numeric','min:0'],
+            'contract_amount'             => ['nullable','numeric','min:0'],
             'estimated_cost_bdt'          => ['nullable','numeric','min:0'],
             'requisition_receiving_date'  => ['nullable','date'],
             'delivery_date'               => ['nullable','date'],
@@ -326,7 +332,8 @@ class RequisitionController extends Controller
     if (!empty($filters['date_from']))             $q->whereDate('created_at','>=',$filters['date_from']);
     if (!empty($filters['date_to']))               $q->whereDate('created_at','<=',$filters['date_to']);
 
-    $requisitions = $q->orderByDesc('created_at', 'DESC')
+    $requisitions = $q->orderByDesc('created_at')   // newest first
+        ->orderByDesc('id')
         ->paginate($perPage)
         ->withQueryString();
 
@@ -376,7 +383,8 @@ class RequisitionController extends Controller
     if (!empty($filters['date_from']))             $q->whereDate('created_at','>=',$filters['date_from']);
     if (!empty($filters['date_to']))               $q->whereDate('created_at','<=',$filters['date_to']);
 
-    $requisitions = $q->orderByDesc('created_at')
+    $requisitions = $q->orderByDesc('created_at')   // newest first
+        ->orderByDesc('id')
         ->paginate($perPage)
         ->withQueryString();
 

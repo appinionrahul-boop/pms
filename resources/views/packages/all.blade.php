@@ -123,7 +123,7 @@
                 <td class="text-center" data-order="{{ $p->estimated_cost_bdt ?? 0 }}">
                   {{ number_format((float)($p->estimated_cost_bdt ?? 0), 2) }}
                 </td>
-                <td class="text-center">{{ $p->assigned_officer_name ?? '—' }}</td>
+                <td class="text-center">{{ $p->assigned_officer_name ?: 'Unassigned' }}</td>
                 <td class="text-center">{{ $p->fiscal_year ?? '—' }}</td>
               </tr>
             @endforeach
@@ -151,7 +151,7 @@
   $(function () {
     $('#packagesTable').DataTable({
       responsive: false,             // show all columns; no +/- collapse
-      order: [[0, 'asc']],           // sort by Package No
+      order: [],                     // keep the server order (newest created first)
       paging: true,                  // client-side pagination (page loads all rows)
       pageLength: 25,
       lengthMenu: [5, 10, 25, 50, 100],

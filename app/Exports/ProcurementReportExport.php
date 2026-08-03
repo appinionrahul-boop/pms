@@ -61,6 +61,7 @@ class ProcurementReportExport implements FromView
                 // 'requisitions.type_of_goods         as type_of_goods',
                 'pt.name                            as procurement_type',
                 'requisitions.official_estimated_cost_bdt as official_estimated_cost_bdt',
+                'requisitions.contract_amount       as contract_amount',
                 'requisitions.requisition_receiving_date as requisition_receiving_date',
                 'requisitions.delivery_date         as delivery_date',
                 'requisitions.reference_link        as reference_link',
@@ -103,7 +104,9 @@ class ProcurementReportExport implements FromView
             $q->where('requisitions.officer_name', $this->filters['officer_name']);
         }
 
-        $records = $q->get();
+        $records = $q->orderByDesc('requisitions.created_at')   // newest first
+            ->orderByDesc('requisitions.id')
+            ->get();
 
         return view('reports.export', compact('records'));
     }

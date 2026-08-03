@@ -106,6 +106,7 @@
             <th class="text-center">Approving Authority</th>
             <th class="text-center">Signing Date</th>
             <th class="text-center">Official Est. Cost (BDT)</th>
+            <th class="text-center">Contract Amount</th>
             <th class="text-center">Requisition Receiving Date</th>
             <th class="text-center">Delivery Date</th>
             <th class="text-center">Reference Link</th>
@@ -161,6 +162,9 @@
                 @else
                   —
                 @endif
+              </td>
+              <td class="text-end" data-order="{{ $r->contract_amount ?? 0 }}">
+                {{ is_null($r->contract_amount) ? '—' : number_format((float)$r->contract_amount, 2) }}
               </td>
               <td class="text-center">
                 {{ $r->requisition_receiving_date ? \Carbon\Carbon::parse($r->requisition_receiving_date)->format('d M Y') : '—' }}
@@ -266,7 +270,7 @@
 
   $(function () {
     $('#packagesTable').DataTable({
-      order: [[1, 'asc']],  // sort by Package No by default
+      order: [],  // keep the server order (newest created first)
       pageLength: 10,
       lengthMenu: [10, 25, 50, 100],
       searching:false,
@@ -275,7 +279,7 @@
         // Description & Assigned Person left-aligned
         { targets: [2, 9], className: 'text-start align-middle' },
         // Make currency columns align right for readability
-        { targets: [11, 15], className: 'text-end align-middle' }
+        { targets: [11, 15, 16], className: 'text-end align-middle' }
       ],
       language: {
         search: 'Search:',

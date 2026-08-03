@@ -139,6 +139,7 @@
               <th class="text-center">Name of Vendor</th>
               <th class="text-center">Department</th>
               <th class="text-center">Type of Procurement</th>
+              <th class="text-center">Contract Amount</th>
               <th class="text-center">Assigned Officer</th>
               <th class="text-center" data-priority="3">% Status</th>
               <th class="text-center" data-priority="1">Actions</th>
@@ -169,6 +170,9 @@
                 <td class="text-center">{{ $r->vendor_name ?? '—' }}</td>
                 <td class="text-center">{{ $r->department->name ?? '—' }}</td>
                 <td class="text-center">{{ $r->procurementType->name ?? '—' }}</td>
+                <td class="text-end" data-order="{{ $r->contract_amount ?? 0 }}">
+                  {{ $r->contract_amount !== null ? number_format((float)$r->contract_amount, 2) : '—' }}
+                </td>
                 <td class="text-center">{{ $r->officer_name ?? '—' }}</td>
                 @php
                   $statusPctMap = [
@@ -297,14 +301,15 @@
 <script>
   $(function () {
     $('#packagesTable').DataTable({
-      order: [[0, 'asc']],           // sort by Package No
+      order: [],                     // keep the server order (newest created first)
       paging: false,                 // server-side pagination (Laravel links below the table)
       info: false,
       searching: false,              // search bar hidden (you have server-side filters)
       columnDefs: [
-        { targets: 10, orderable: false, className: 'text-center align-middle' }, // Actions column
+        { targets: 11, orderable: false, className: 'text-center align-middle' }, // Actions column
         { targets: 2, className: 'text-start align-middle' },                      // Description left-aligned
-        { targets: [0,1,3,4,5,6,7,8,9], className: 'text-center align-middle' }
+        { targets: 8, className: 'text-end align-middle' },                        // Contract Amount right-aligned
+        { targets: [0,1,3,4,5,6,7,9,10], className: 'text-center align-middle' }
       ],
       language: {
         emptyTable: 'No requisitions found.',

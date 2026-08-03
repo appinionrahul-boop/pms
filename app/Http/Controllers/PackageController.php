@@ -17,6 +17,17 @@ use Maatwebsite\Excel\Validators\ValidationException;
 class PackageController extends Controller
 {
     /**
+     * Headings a bulk-upload sheet must carry. description and assigned_officer
+     * are optional, so they are not listed here.
+     */
+    private const REQUIRED_COLUMNS = [
+        'package_no',
+        'procurement_method',
+        'estimated_cost_bdt',
+        'fiscal_year',
+    ];
+
+    /**
      * Fiscal year options: previous, current and next FY only. Bangladesh FY
      * runs July–June, so the current FY starts this year from July onward,
      * else last year.
@@ -71,7 +82,8 @@ class PackageController extends Controller
             }))
             ->when($officerId, fn($q) => $q->where('assigned_officer_id', $officerId))
             ->when($fiscalYear, fn($q) => $q->where('fiscal_year', $fiscalYear))
-            ->orderByDesc('id')
+            ->orderByDesc('created_at')          // newest first
+            ->orderByDesc('id')                  // tiebreak for rows saved in the same second
             ->paginate(5)
             ->withQueryString();
 
@@ -109,9 +121,11 @@ class PackageController extends Controller
             return back()->withErrors(['The file has no data rows below the heading row.']);
         }
 
-        if (!array_key_exists('package_no', $sheet[0])) {
+        $missingColumns = array_values(array_diff(self::REQUIRED_COLUMNS, array_keys($sheet[0])));
+
+        if ($missingColumns) {
             return back()->withErrors([
-                'No "package_no" column found. The first row must contain the headings: '
+                'Missing column(s): ' . implode(', ', $missingColumns) . '. The first row must contain the headings: '
                 . 'package_no, description, procurement_method, estimated_cost_bdt, assigned_officer, fiscal_year. '
                 . 'Use the Sample Excel button for the exact format.',
             ]);
@@ -119,7 +133,10 @@ class PackageController extends Controller
 
         $errors = $this->findSheetProblems($sheet);
 
+        // Nothing is inserted unless every row passes — the user fixes the file and re-uploads.
         if ($errors) {
+            array_unshift($errors, 'No packages were imported. Fix the following and upload the file again.');
+
             return back()->withErrors($errors);
         }
 
@@ -150,29 +167,84 @@ class PackageController extends Controller
     /**
      * Blocking problems in the uploaded sheet — every offending row at once.
      * Sheet row number is index + 2, because row 1 holds the headings.
+     *
+     * Every column is mandatory except description and assigned_officer.
      */
     private function findSheetProblems(array $sheet): array
     {
-        $errors = [];
-        $blank = $seenAt = [];
+        $errors  = [];
+        $seenAt  = [];
+        $missing = [];
+        $badMethod = $badCost = $badFy = [];
+
+        $methods = ProcurementMethod::pluck('name')
+            ->map(fn ($n) => mb_strtolower(trim($n)))->all();
 
         foreach ($sheet as $i => $row) {
-            $no = trim((string) ($row['package_no'] ?? ''));
             $rowNo = $i + 2;
 
+            // Entirely blank rows (trailing rows in the sheet) are skipped by the
+            // importer as well, so they are not treated as missing data.
+            if (self::rowIsBlank($row)) {
+                continue;
+            }
+
+            $no     = trim((string) ($row['package_no'] ?? ''));
+            $method = trim((string) ($row['procurement_method'] ?? ''));
+            $cost   = trim((string) ($row['estimated_cost_bdt'] ?? ''));
+            $fy     = trim((string) ($row['fiscal_year'] ?? ''));
+
+            // Package Number
             if ($no === '') {
-                $blank[] = $rowNo;
-                continue;
-            }
-            if (mb_strlen($no) > 50) {
+                $missing[$rowNo][] = 'Package Number';
+            } elseif (mb_strlen($no) > 50) {
                 $errors[] = "Row {$rowNo}: Package Number is longer than 50 characters.";
-                continue;
+            } else {
+                $seenAt[$no][] = $rowNo;
             }
-            $seenAt[$no][] = $rowNo;
+
+            // Procurement Method — must match one of the configured methods
+            if ($method === '') {
+                $missing[$rowNo][] = 'Procurement Method';
+            } elseif (!in_array(mb_strtolower($method), $methods, true)) {
+                $badMethod[] = "{$rowNo} (\"{$method}\")";
+            }
+
+            // Estimated Cost (BDT)
+            if ($cost === '') {
+                $missing[$rowNo][] = 'Estimated Cost (BDT)';
+            } elseif (!is_numeric($cost) || (float) $cost < 0) {
+                $badCost[] = "{$rowNo} (\"{$cost}\")";
+            }
+
+            // Fiscal Year
+            if ($fy === '') {
+                $missing[$rowNo][] = 'Fiscal Year';
+            } elseif (PackagesImport::normalizeFiscalYear($fy) === null) {
+                $badFy[] = "{$rowNo} (\"{$fy}\")";
+            }
         }
 
-        if ($blank) {
-            $errors[] = 'Package Number is empty on row(s) ' . implode(', ', $blank) . '.';
+        foreach ($missing as $rowNo => $fields) {
+            $errors[] = sprintf(
+                'Row %d: %s %s required.',
+                $rowNo,
+                implode(', ', $fields),
+                count($fields) > 1 ? 'are' : 'is'
+            );
+        }
+
+        if ($badMethod) {
+            $errors[] = 'Procurement Method is not recognised on row(s) ' . implode(', ', $badMethod)
+                . '. Valid methods: ' . ProcurementMethod::orderBy('name')->pluck('name')->implode(', ') . '.';
+        }
+        if ($badCost) {
+            $errors[] = 'Estimated Cost (BDT) must be a number of 0 or more on row(s) '
+                . implode(', ', $badCost) . '.';
+        }
+        if ($badFy) {
+            $errors[] = 'Fiscal Year is not recognised on row(s) ' . implode(', ', $badFy)
+                . '. Use a format like 2025-26.';
         }
 
         // Already saved in the system.
@@ -202,39 +274,54 @@ class PackageController extends Controller
     }
 
     /**
-     * Non-blocking notices: values that import as blank because nothing matched.
+     * Non-blocking notices. Assigned Person is optional — a blank cell, or a name
+     * that matches nobody in the officers list, imports as Unassigned.
      */
     private function findSheetWarnings(array $sheet): array
     {
-        $methods  = ProcurementMethod::pluck('name')
-            ->map(fn ($n) => strtolower($n))->all();
-        $warnings = [];
-        $badMethod = $badFy = [];
+        $warnings  = [];
+        $unmatched = $unassigned = [];
+        $importer  = new PackagesImport;
 
         foreach ($sheet as $i => $row) {
-            $rowNo  = $i + 2;
-            $method = trim((string) ($row['procurement_method'] ?? ''));
-            $fy     = trim((string) ($row['fiscal_year'] ?? ''));
-
-            if ($method !== '' && !in_array(strtolower($method), $methods, true)) {
-                $badMethod[] = "{$rowNo} (\"{$method}\")";
+            if (self::rowIsBlank($row)) {
+                continue;
             }
-            if ($fy !== '' && PackagesImport::normalizeFiscalYear($fy) === null) {
-                $badFy[] = "{$rowNo} (\"{$fy}\")";
+
+            $rowNo   = $i + 2;
+            $officer = trim((string) ($row['assigned_officer'] ?? ''));
+
+            if ($officer === '') {
+                $unassigned[] = $rowNo;
+            } elseif ($importer->resolveOfficerId($officer) === null) {
+                $unmatched[] = "{$rowNo} (\"{$officer}\")";
             }
         }
 
-        if ($badMethod) {
-            $warnings[] = 'Procurement method not recognised and left blank on row(s) '
-                . implode(', ', $badMethod) . '. Valid methods: '
-                . ProcurementMethod::pluck('name')->implode(', ') . '.';
+        if ($unassigned) {
+            $warnings[] = 'Assigned Person is empty on row(s) ' . implode(', ', $unassigned)
+                . ' — imported as Unassigned.';
         }
-        if ($badFy) {
-            $warnings[] = 'Fiscal year not recognised and left blank on row(s) '
-                . implode(', ', $badFy) . '. Use a format like 2025-26.';
+        if ($unmatched) {
+            $warnings[] = 'Assigned Person not recognised on row(s) ' . implode(', ', $unmatched)
+                . ' — imported as Unassigned.';
         }
 
         return $warnings;
+    }
+
+    /**
+     * True when every cell of a sheet row is empty.
+     */
+    private static function rowIsBlank(array $row): bool
+    {
+        foreach ($row as $value) {
+            if (trim((string) ($value ?? '')) !== '') {
+                return false;
+            }
+        }
+
+        return true;
     }
     // --- Stubs for Add New / Edit ---
 
@@ -247,7 +334,7 @@ class PackageController extends Controller
         } while (Package::where('package_id', $generatedId)->exists());
 
         $methods  = ProcurementMethod::orderBy('name')->get();
-        $officers = \App\Models\Officer::orderBy('name')->get();
+        $officers = \App\Models\Officer::assignable();   // inactive officers are not offered
         $fiscalYears = self::fiscalYearOptions();
 
         return view('packages.create', compact('methods', 'generatedId', 'officers', 'fiscalYears'));
@@ -279,7 +366,8 @@ class PackageController extends Controller
     public function edit(Package $package)
     {
         $methods  = \App\Models\ProcurementMethod::orderBy('name')->get();
-        $officers = \App\Models\Officer::orderBy('name')->get();
+        // active officers, plus whoever is already assigned so an edit does not clear them
+        $officers = \App\Models\Officer::assignable($package->assigned_officer_id);
         $fiscalYears = self::fiscalYearOptions();
         // keep an already-saved fiscal year selectable even once it leaves the 3-year window
         if ($package->fiscal_year && !in_array($package->fiscal_year, $fiscalYears, true)) {
@@ -353,7 +441,7 @@ class PackageController extends Controller
             $q->where('p.fiscal_year', $fiscalYear);
         }
 
-        $packages    = $q->orderByDesc('p.created_at')->get();
+        $packages    = $q->orderByDesc('p.created_at')->orderByDesc('p.id')->get();
         $officers    = \App\Models\Officer::orderBy('name')->get();
         $fiscalYears = self::fiscalYearFilterOptions();
 

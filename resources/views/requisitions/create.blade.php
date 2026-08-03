@@ -152,10 +152,14 @@
               </div>
               <div class="col-md-6">
                 <label class="form-control-label">Assigned Officer Name</label>
+                @php
+                  // Prefill with the officer already assigned to the package; still editable.
+                  $selectedOfficer = old('officer_name', optional($package->assignedOfficer)->name);
+                @endphp
                 <select name="officer_name" class="form-control">
                   <option value="">-- Select Officer --</option>
                   @foreach($officers as $off)
-                    <option value="{{ $off->name }}" @selected(old('officer_name') == $off->name)>{{ $off->name }}</option>
+                    <option value="{{ $off->name }}" @selected($selectedOfficer === $off->name)>{{ $off->name }}</option>
                   @endforeach
                 </select>
                 @error('officer_name')
@@ -189,6 +193,13 @@
                     <option value="{{ $l->id }}" @selected(old('lc_status_id') == $l->id)>{{ $l->name }}</option>
                   @endforeach
                 </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-control-label">Contract Amount (BDT)</label>
+                <input type="number" step="0.01" min="0" name="contract_amount" class="form-control" value="{{ old('contract_amount') }}">
+                @error('contract_amount')
+                  <div class="text-danger small">{{ $message }}</div>
+                @enderror
               </div>
             </div>
 

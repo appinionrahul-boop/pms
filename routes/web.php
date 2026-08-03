@@ -15,6 +15,7 @@ use App\Http\Controllers\TechnicalSpecController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\OfficerController;
 use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Artisan;
 /*
@@ -123,6 +124,9 @@ Route::group(['middleware' => 'auth'], function () {
     // Ajax feed for DataTables
    Route::get('/packages/download/excel', [PackageController::class, 'downloadExcel'])
      ->name('packages.download.excel');
+
+	 //Assigned Officer Management (admin only — gated inside the controller)
+	 Route::resource('officers', OfficerController::class)->except(['show']);
 
 	 //User Management
 	 Route::get('/users/management', [UserManagementController::class, 'index'])

@@ -110,6 +110,17 @@
 
         <div class="row mb-3">
           <div class="col-md-6">
+            <label class="form-label">Contract Amount (BDT)</label>
+            <input type="number" step="0.01" min="0" name="contract_amount" class="form-control"
+                   value="{{ old('contract_amount',$requisition->contract_amount) }}">
+            @error('contract_amount')
+              <div class="text-danger small">{{ $message }}</div>
+            @enderror
+          </div>
+        </div>
+
+        <div class="row mb-3">
+          <div class="col-md-6">
             <label class="form-label">Unit</label>
             <select name="unit_id" class="form-control">
               <option value="">-- Select --</option>

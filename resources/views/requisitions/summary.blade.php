@@ -148,8 +148,8 @@
                     {{ $r->description ?? '—' }}
                   </div>
                 </td>
-                <td class="text-center" data-order="{{ $r->official_estimated_cost_bdt ?? 0 }}">
-                  {{ $r->official_estimated_cost_bdt !== null ? number_format((float)$r->official_estimated_cost_bdt, 2) : '—' }}
+                <td class="text-end" data-order="{{ $r->contract_amount ?? 0 }}">
+                  {{ $r->contract_amount !== null ? number_format((float)$r->contract_amount, 2) : '—' }}
                 </td>
                 <td class="text-center">
                   <span class="badge bg-gradient-secondary" role="button" style="cursor:pointer;"
@@ -273,13 +273,14 @@
   $(function () {
     $('#summaryTable').DataTable({
       responsive: false,              // no +/- column collapse on this table
-      order: [[0, 'asc']],            // sort by ERP Req. No.
+      order: [],                      // keep the server order (newest created first)
       paging: false,                  // server-side pagination (Laravel links below the table)
       info: false,
       searching: false,               // server-side filters used instead
       columnDefs: [
         { targets: 1, className: 'text-start align-middle' },                     // Description left-aligned
-        { targets: [0,2,3,4,5], className: 'text-center align-middle' }
+        { targets: 2, className: 'text-end align-middle' },                       // Contract Amount right-aligned
+        { targets: [0,3,4,5], className: 'text-center align-middle' }
       ],
       language: {
         emptyTable: 'No requisitions found.',

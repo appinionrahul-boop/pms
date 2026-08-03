@@ -18,7 +18,8 @@ class PackagesImport implements ToModel, WithHeadingRow, SkipsEmptyRows, WithVal
 
     public function __construct()
     {
-        $this->officers = Officer::get(['id', 'name']);
+        // Inactive officers are not assignable, so a sheet naming one imports as Unassigned.
+        $this->officers = Officer::where('is_active', true)->get(['id', 'name']);
     }
 
     public function model(array $row)
@@ -88,7 +89,7 @@ class PackagesImport implements ToModel, WithHeadingRow, SkipsEmptyRows, WithVal
      * case, spacing, punctuation, honorifics (e.g. "Md."), partial names and
      * small typos. Returns the officer id, or null when nothing matches.
      */
-    protected function resolveOfficerId($raw): ?int
+    public function resolveOfficerId($raw): ?int
     {
         $input = $this->normalizeName((string) ($raw ?? ''));
         if ($input === '') {
@@ -130,21 +131,32 @@ class PackagesImport implements ToModel, WithHeadingRow, SkipsEmptyRows, WithVal
         return preg_replace('/\s+/', ' ', $name);
     }
 
+    /**
+     * Every column is required except description and assigned_officer.
+     * PackageController checks the whole sheet before this runs so the user gets
+     * all the bad rows at once; these rules are the last line of defence.
+     */
     public function rules(): array
     {
         return [
             // ↓ removed 'string' so it accepts numbers or text; still unique/max/duplicate-in-sheet checks
             '*.package_no'         => ['required', 'max:50', 'distinct', Rule::unique('packages','package_no')],
-            '*.estimated_cost_bdt' => ['nullable', 'min:0'],
+            '*.procurement_method' => ['required'],
+            '*.estimated_cost_bdt' => ['required', 'numeric', 'min:0'],
+            '*.fiscal_year'        => ['required'],
         ];
     }
 
     public function customValidationMessages()
     {
         return [
-            '*.package_no.required' => 'Package Number is required.',
-            '*.package_no.unique'   => 'Package Number already exists.',
-            '*.package_no.distinct' => 'Package Number already exists — it is repeated in the file.',
+            '*.package_no.required'         => 'Package Number is required.',
+            '*.package_no.unique'           => 'Package Number already exists.',
+            '*.package_no.distinct'         => 'Package Number already exists — it is repeated in the file.',
+            '*.procurement_method.required' => 'Procurement Method is required.',
+            '*.estimated_cost_bdt.required' => 'Estimated Cost (BDT) is required.',
+            '*.estimated_cost_bdt.numeric'  => 'Estimated Cost (BDT) must be a number.',
+            '*.fiscal_year.required'        => 'Fiscal Year is required.',
         ];
     }
 }

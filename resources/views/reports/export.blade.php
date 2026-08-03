@@ -17,6 +17,7 @@
       <th>Approving Authority</th>
       <th>Signing Date</th>
       <th class="text-end">Official Est. Cost (BDT)</th>
+      <th class="text-end">Contract Amount</th>
       <th>Requisition Receiving Date</th>
       <th>Delivery Date</th>
       <th>Reference Link</th>
@@ -64,6 +65,11 @@
       {{-- Official Estimated Cost (BDT) --}}
       <td class="text-end">
         {{ is_null($r->official_estimated_cost_bdt) ? '—' : number_format((float)$r->official_estimated_cost_bdt, 2) }}
+      </td>
+
+      {{-- Contract Amount --}}
+      <td class="text-end">
+        {{ is_null($r->contract_amount) ? '—' : number_format((float)$r->contract_amount, 2) }}
       </td>
 
       {{-- Requisition Receiving Date --}}

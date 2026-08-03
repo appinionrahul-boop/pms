@@ -104,7 +104,7 @@
 <script>
   $(function () {
     $('#usersTable').DataTable({
-      order: [[0, 'asc']],
+      order: [],   // keep the server order (newest created first)
       pageLength: 5,
       lengthMenu: [5, 10, 25, 50, 100],
       language: {

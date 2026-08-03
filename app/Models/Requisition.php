@@ -11,7 +11,7 @@ class Requisition extends Model
         'department_id','procurement_type_id','assigned_officer_id','tech_spec_file',
         'approving_authority_id','signing_date','lc_status_id','reference_annex',
         'initiate_date','tender_opened_date','evaluation_completed_date',
-        'description','procurement_method_id','vendor_name','official_estimated_cost_bdt',
+        'description','procurement_method_id','vendor_name','official_estimated_cost_bdt','contract_amount',
         'requisition_receiving_date','delivery_date','reference_link','comments','officer_name',
     ];
 
