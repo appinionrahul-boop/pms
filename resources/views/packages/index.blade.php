@@ -21,6 +21,33 @@
     text-justify: inter-word;  /* better spacing on supported browsers */
     hyphens: auto;             /* nicer breaks for long words */
   }
+  /* make selection checkboxes clearly visible over the theme defaults */
+  #selectAllPackages, .pkg-select{
+    width: 1.15rem;
+    height: 1.15rem;
+    border: 2px solid #67748e !important;
+    border-radius: 0.25rem;
+    background-color: #fff;
+    cursor: pointer;
+    vertical-align: middle;
+    margin: 0;
+  }
+  #selectAllPackages:checked, .pkg-select:checked{
+    background-color: #ea0606 !important;
+    border-color: #ea0606 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3 6-6'/%3e%3c/svg%3e") !important;
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+  #selectAllPackages:indeterminate{
+    background-color: #ea0606 !important;
+    border-color: #ea0606 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-width='3' d='M5 10h10'/%3e%3c/svg%3e") !important;
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
 </style>
 
 
@@ -68,6 +95,11 @@
           </div>
 
           <div class="d-flex gap-2">
+            {{-- Delete Selected --}}
+            <button type="button" id="bulkDeleteBtn" class="btn btn-outline-danger btn-sm d-none">
+              <i class="fas fa-trash me-1"></i> Delete Selected (<span id="bulkDeleteCount">0</span>)
+            </button>
+
             {{-- Bulk Upload (Excel) --}}
             <form id="bulkUploadForm" action="{{ route('packages.bulkUpload') }}" method="POST" enctype="multipart/form-data">
               @csrf
@@ -129,6 +161,9 @@
             <table id="appPackagesTable" class="table align-items-center mb-0" style="width:100%">
               <thead>
                 <tr style="text-align: center;">
+                  <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="width:40px;">
+                    <input type="checkbox" id="selectAllPackages" class="form-check-input" title="Select all on this page">
+                  </th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Package No.</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Description</th>
                   <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Procurement Method</th>
@@ -141,6 +176,9 @@
               <tbody>
                 @forelse ($packages as $pkg)
                   <tr style="text-align: center;">
+                    <td>
+                      <input type="checkbox" class="form-check-input pkg-select" value="{{ $pkg->id }}">
+                    </td>
                     <td><span class="text-sm fw-semibold">{{ $pkg->package_no }}</span></td>
                     <!--<td>-->
                     <!--  <span class="text-sm text-truncate d-inline-block" style="max-width: 320px;">-->
@@ -211,7 +249,7 @@
                   </tr>
                 @empty
                   <tr>
-                    <td colspan="7" class="text-center py-4 text-sm text-secondary">
+                    <td colspan="8" class="text-center py-4 text-sm text-secondary">
                       No packages found. Click <strong>Add New</strong> or use <strong>Bulk Upload</strong>.
                     </td>
                   </tr>
@@ -230,6 +268,63 @@
     </div>
   </div>
 </div>
+
+{{-- Hidden form for bulk delete (kept outside the table to avoid nesting forms) --}}
+<form id="bulkDeleteForm" action="{{ route('packages.bulkDelete') }}" method="POST" class="d-none">
+  @csrf
+</form>
+
+<script>
+  (function () {
+    const selectAll = document.getElementById('selectAllPackages');
+    const btn       = document.getElementById('bulkDeleteBtn');
+    const countEl   = document.getElementById('bulkDeleteCount');
+    const form      = document.getElementById('bulkDeleteForm');
+
+    const boxes = () => Array.from(document.querySelectorAll('.pkg-select'));
+    const checked = () => boxes().filter(b => b.checked);
+
+    function refresh() {
+      const n = checked().length;
+      countEl.textContent = n;
+      btn.classList.toggle('d-none', n === 0);
+      if (selectAll) {
+        const all = boxes();
+        selectAll.checked = all.length > 0 && n === all.length;
+        selectAll.indeterminate = n > 0 && n < all.length;
+      }
+    }
+
+    if (selectAll) {
+      selectAll.addEventListener('change', function () {
+        boxes().forEach(b => { b.checked = selectAll.checked; });
+        refresh();
+      });
+    }
+
+    document.addEventListener('change', function (e) {
+      if (e.target.classList && e.target.classList.contains('pkg-select')) refresh();
+    });
+
+    btn.addEventListener('click', function () {
+      const ids = checked().map(b => b.value);
+      if (!ids.length) return;
+      if (!confirm('Delete ' + ids.length + ' selected package(s)? This action cannot be undone.')) return;
+
+      form.querySelectorAll('input[name="ids[]"]').forEach(i => i.remove());
+      ids.forEach(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'ids[]';
+        input.value = id;
+        form.appendChild(input);
+      });
+      form.submit();
+    });
+
+    refresh();
+  })();
+</script>
 
 @endsection
 

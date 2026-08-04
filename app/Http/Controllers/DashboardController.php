@@ -44,7 +44,11 @@ class DashboardController extends Controller
         // ---------------------------------------------
         // Fiscal year filter (packages.fiscal_year; requisitions via package)
         // ---------------------------------------------
-        $fiscalYear  = $request->input('fiscal_year');
+        // Default to the current fiscal year on first load; an explicit
+        // (even empty) fiscal_year param means the user chose "All".
+        $fiscalYear  = $request->has('fiscal_year')
+            ? $request->input('fiscal_year')
+            : PackageController::currentFiscalYear();
         $fiscalYears = PackageController::fiscalYearFilterOptions();
         if ($fiscalYear && !in_array($fiscalYear, $fiscalYears, true)) {
             $fiscalYear = null;

@@ -72,6 +72,9 @@ Route::group(['middleware' => 'auth'], function () {
     // Bulk Upload (Excel)
     Route::post('packages/bulk-upload', [PackageController::class, 'bulkUpload'])->name('packages.bulkUpload');
 
+    // Bulk Delete (selected packages)
+    Route::post('packages/bulk-delete', [PackageController::class, 'bulkDelete'])->name('packages.bulkDelete');
+
 	//Requisition
 	// Route::resource('requisitions', RequisitionController::class)->except(['show','index']);
 

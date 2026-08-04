@@ -46,6 +46,17 @@ class PackageController extends Controller
     }
 
     /**
+     * The current fiscal year in the same "YYYY-YY" format used on packages.
+     */
+    public static function currentFiscalYear(): string
+    {
+        $now = now();
+        $start = $now->month >= 7 ? $now->year : $now->year - 1;
+
+        return $start . '-' . substr((string) ($start + 1), -2);
+    }
+
+    /**
      * Fiscal years offered in filter dropdowns: the 3-year window plus any
      * value already saved on a package, newest first.
      */
@@ -405,6 +416,22 @@ class PackageController extends Controller
     {
         $package->delete();
         return back()->with('success', 'Package deleted.');
+    }
+
+    public function bulkDelete(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer', 'exists:packages,id'],
+        ], [
+            'ids.required' => 'Select at least one package to delete.',
+        ]);
+
+        $count = Package::whereIn('id', $validated['ids'])->delete();
+
+        return redirect()
+            ->route('packages.index')
+            ->with('success', "{$count} package(s) deleted.");
     }
 
     public function all(Request $request)
